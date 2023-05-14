@@ -1,0 +1,737 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url = "file:../DB/PathfinderGMHelper.db"
+}
+
+model Source {
+  SID Int @id @default(autoincrement())
+  Name String
+  Description String
+  gods Gods[]
+  subweather Subweather[]
+  weather Weather[]
+  traps Traps[]
+  wilderness Wilderness[]
+  hazards Hazards[]
+  siegeengines SiegeEngines[]
+  dungeonelements DungeonElements[]
+  dungeontypes DungeonTypes[]
+  magicitems MagicItems[]
+  rules Rules[]
+  spells Spells[]
+  magicschools MagicSchools[]
+  magicsubschools MagicSubschools[]
+  equipment Equipment[]
+  races Races[]
+  classes Classes[]
+  feats Feats[]
+  monsters Monsters[] 
+}
+
+model Images {
+  IID Int @id @default(autoincrement())
+  Link String
+  monsters Monsters[]
+  monstertypes MonsterTypes[]
+  rules Rules[]
+  subrules Subrules[]
+}
+
+model BasicAbilities {
+  BAID Int @id @default(autoincrement())
+  Name String
+  Description String
+  character CharacterParameters[]
+  skill Skills[]
+}
+
+model Monsters {
+  MID Int @default(autoincrement()) @id
+  Name String
+  type MonsterTypes[]
+  CR Int
+  Exp Int
+  alignment Alignments @relation(fields: [Alignment], references: [AID])
+  Alignment Int
+  attack MonsterAttackProps @relation(fields: [Attack], references: [MAPID])
+  Attack Int
+  defence DefenceProps @relation(fields: [Defence], references: [DPID])
+  Defence Int @unique
+  parameters CharacterParameters @relation(fields: [Parameters], references: [CPID])
+  Parameters Int @unique
+  creation MonsterCreation? @relation(fields: [Creation], references: [MCID])
+  Creation Int? @unique
+  ecology MonsterEcologyProps @relation(fields: [Ecology], references: [MEPID])
+  Ecology Int
+  Description String
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+  useradd Users @relation("UseraddMonster", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdMonster")
+  image Images? @relation(fields: [Image], references: [IID])
+  Image Int?
+  Table String? //OAO MMM
+}
+
+model MonsterTypes {
+  TID Int @default(autoincrement()) @id
+  Name String
+  image Images? @relation(fields: [Image], references: [IID])
+  Image Int?
+  Description String
+  monster Monsters[]
+}
+
+model MonsterAttackProps {
+  MAPID Int @id @default(autoincrement())
+  Speed String
+  Melee String?
+  Range String?
+  SpecialAttack String?
+  SpellLikeAbilities String?
+  monster Monsters[]
+}
+
+model MonsterEcologyProps {
+  MEPID Int @id @default(autoincrement())
+  Environment String
+  Organization String
+  Treasure String
+  Language String?
+  monster Monsters[]
+}
+
+model DefenceProps {
+  DPID Int @id @default(autoincrement())
+  AC Int
+  AC_touch Int
+  AC_flatfooted Int
+  HP Int
+  Fort Int
+  Will Int
+  Ref Int
+  DefAbilities String?
+  Immune String?
+  Resist String?
+  DR String?
+  SR String?
+  Sences String
+  Init String
+  monster Monsters?
+  character Characters?
+}
+
+model CharacterParameters {
+  CPID Int @id @default(autoincrement())
+  basicabi BasicAbilities @relation(fields: [BasicAbi], references: [BAID])
+  BasicAbi Int
+  BAB Int
+  CBM Int
+  CMD Int
+  feats Feats[]
+  items Equipment[]
+  skills Skills[]
+  monster Monsters?
+  character Characters?
+}
+
+model MonsterCreation {
+  MCID Int @id @default(autoincrement())
+  AC String?
+  HD String?
+  Saves String?
+  DefenceAbilities String?
+  Speed String?
+  Attack String?
+  SpecialAttack String?
+  Abilities String?
+  BAB String?
+  Skills String?
+  Feats String?
+  SpecialQualities String?
+  monster Monsters?
+}
+
+model FeatTypes {
+  FTID Int @id @default(autoincrement())
+  Name String
+  Description String
+  feats Feats[]
+}
+
+model Feats {
+  FID Int @id @default(autoincrement())
+  Name String
+  type FeatTypes @relation(fields: [Type], references: [FTID])
+  Type Int
+  Requirements String?
+  ShortDesc String
+  FullDesc String
+  WithoutFeat String?
+  Note String
+  useradd Users @relation("UseraddFeat", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdFeat")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+  characterparameters CharacterParameters[]
+}
+
+model Alignments {
+  AID Int @id @default(autoincrement())
+  Name String
+  Description String
+  monster Monsters[]
+  class Classes[]
+  character Characters[]
+}
+
+model ClassFeatures {
+  CFID Int @id @default(autoincrement())
+  Name String
+  Description String
+  class Classes[]
+}
+
+model Skills {
+  SID Int @id @default(autoincrement())
+  Name String
+  abi BasicAbilities @relation(fields: [Abi], references: [BAID])
+  Abi Int
+  ShortDesc String
+  FullDesc String
+  class Classes[]
+  characterparameters CharacterParameters[] 
+}
+
+model Classes {
+  CID Int @id @default(autoincrement())
+  Name String
+  Description String
+  Role String
+  alignment Alignments[]
+  HD String
+  classskills Skills[]
+  SkillPoints Int
+  features ClassFeatures[]
+  ExClass String
+  useradd Users @relation("UseraddClass", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdClass")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+  charactermulticlass ClassesOnCharacters[]
+}
+
+model RaceFeatures {
+  RFID Int @id @default(autoincrement())
+  Name String
+  Description String
+  race Races[]
+}
+
+model Races {
+  RID Int @id @default(autoincrement())
+  Name String
+  ShortDesc String
+  FullDesc String
+  Society String
+  Relations String
+  AlignmentReligion String
+  Adventure String
+  NamesMale String
+  NameFemale String
+  features RaceFeatures[]
+  useradd Users @relation("UseraddRace", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdRace")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+  characters Characters[]
+}
+
+model EquipmentTypes {
+  ETID Int @id @default(autoincrement())
+  Name String
+  equipment Equipment[]
+}
+
+model Equipment {
+  EID Int @id @default(autoincrement())
+  Name String
+  Description String
+  type EquipmentTypes @relation(fields: [Type], references: [ETID])
+  Type Int
+  Price String
+  Wage Int
+  weapon Weapons? @relation(fields: [Weapon], references: [WID])
+  Weapon Int? @unique
+  armor Armors? @relation(fields: [Armor], references: [AID])
+  Armor Int? @unique
+  useradd Users @relation("UseraddE", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdE")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+  characterparameters CharacterParameters[]
+}
+
+model Weapons {
+  WID Int @id @default(autoincrement())
+  DamageL String
+  DamageNL String
+  Crit String
+  Range Int
+  DmgType String
+  Feature String
+  equipment Equipment?
+}
+
+model Armors {
+  AID Int @id @default(autoincrement())
+  ArmorModifier Int
+  MaxDex Int
+  Penalty String
+  SpellUnsuccess Int
+  Speed30 Int
+  Speed20 Int
+  equipment Equipment?
+}
+
+model SpellTypes {
+  STID Int @id @default(autoincrement())
+  Name String
+  Description String
+  spells Spells[]
+}
+
+model MagicSubschools {
+  MSID Int @id @default(autoincrement())
+  Name String
+  Description String
+  school MagicSchools @relation(fields: [School], references: [MSID])
+  School Int
+  useradd Users @relation("UseraddMSS", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdMSS")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+  spells Spells[]
+}
+
+model MagicSchools {
+  MSID Int @id @default(autoincrement())
+  Name String
+  Description String
+  subschools MagicSubschools[]
+  spells Spells[]
+  useradd Users @relation("UseraddMS", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdMS")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+}
+
+model SpellComponents {
+  SCID Int @id @default(autoincrement())
+  Name String
+  Description String
+  spell Spells[]
+}
+
+model Spells {
+  SID Int @id @default(autoincrement())
+  Name String
+  school MagicSchools @relation(fields: [School], references: [MSID])
+  School Int
+  subschool MagicSubschools? @relation(fields: [Subschool], references: [MSID])
+  Subschool Int?
+  Descriptors String
+  Circle Int
+  component SpellComponents[]
+  CreationTime String
+  Range Int
+  Aim String
+  Durability String
+  SaveThrows String
+  SR String //гъЬ
+  ShortDesc String
+  FullDesc String
+  type SpellTypes @relation(fields: [Type], references: [STID])
+  Type Int
+  useradd Users @relation("UseraddSpell", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdSpell")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+  characters Characters[]
+}
+
+model Rules {
+  RID Int @id @default(autoincrement())
+  Name String
+  Description String
+  image Images? @relation(fields: [Image], references: [IID])
+  Image Int?
+  subrule Subrules[]
+  useradd Users @relation("UseraddRule", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdRule")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+}
+
+model Subrules {
+  SRID Int @id @default(autoincrement())
+  rule Rules @relation(fields: [Rule], references: [RID])
+  Rule Int
+  Name String
+  Description String
+  image Images? @relation(fields: [Image], references: [IID])
+  Image Int?
+  useradd Users @relation("UseraddSubrule", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdSubrule")
+}
+
+model MagicEffects {
+  MEID Int @id @default(autoincrement())
+  Name String
+  Description String
+  magicitem MagicItems[]
+}
+
+model ItemCreation {
+  ICID Int @id @default(autoincrement())
+  miid MagicItems @relation(fields: [MIID], references: [MIID])
+  MIID Int @unique
+  Requirements String
+  Price String
+}
+
+model MagicItems {
+  MIID Int @id @default(autoincrement())
+  Name String
+  Description String
+  effect MagicEffects @relation(fields: [Effect], references: [MEID])
+  Effect Int
+  Aura String
+  CasterLevel Int
+  Category String //mb as another table
+  Price String
+  Weight Int
+  itemcreation ItemCreation?
+  useradd Users @relation("UseraddMI", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdMI")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+}
+
+model DungeonTypes {
+  DTID Int @id @default(autoincrement())
+  Name String
+  Description String
+  useradd Users @relation("UseraddDT", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdDT")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+}
+
+model DungeonElements {
+  DEID Int @id @default(autoincrement())
+  Name String
+  Description String
+  subelement DungeonSubelements[]
+  useradd Users @relation("UseraddDE", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdDE")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+}
+
+model DungeonSubelements {
+  DSID Int @id @default(autoincrement())
+  Name String
+  Description String
+  element DungeonElements @relation(fields: [Element], references: [DEID])
+  Element Int
+}
+
+model SiegeEngines {
+  SEID Int @id @default(autoincrement())
+  Name String
+  Description String
+  Size Int //feet across
+  useradd Users @relation("UseraddSiege", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdSiege")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+}
+
+model Hazards {
+  HID Int @id @default(autoincrement())
+  Name String
+  Description String
+  useradd Users @relation("UseraddHazard", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdHazard")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+}
+
+model Wilderness {
+  WID Int @id @default(autoincrement())
+  Name String
+  Description String
+  wilddetail WildDetails[]
+  useradd Users @relation("UseraddWild", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdWild")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+}
+
+model WildDetails {
+  WDID Int @id @default(autoincrement())
+  Name String
+  Description String
+  type Wilderness @relation(fields: [Type], references: [WID])
+  Type Int
+}
+
+model TrapTypes {
+  TTID Int @id @default(autoincrement())
+  Name String
+  Description String
+  trap Traps[]
+}
+
+model TrapResets {
+  TRID Int @id @default(autoincrement())
+  Name String
+  Description String
+  trap Traps[]
+}
+
+model TrapTriggers {
+  TTID Int @id @default(autoincrement())
+  Name String
+  Description String
+  trap Traps[]
+}
+
+model Traps {
+  TID Int @id @default(autoincrement())
+  Name String
+  Description String
+  type TrapTypes @relation(fields: [Type], references: [TTID])
+  Type Int
+  Perception String
+  DisableDice String
+  trigger TrapTriggers @relation(fields: [Trigger], references: [TTID])
+  Trigger Int
+  reset TrapResets? @relation(fields: [Reset], references: [TRID])
+  Reset Int?
+  Effect String
+  CR String
+  useradd Users @relation("UseraddTrap", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdTrap")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+}
+
+model Weather {
+  WID Int @id @default(autoincrement())
+  Name String
+  Description String
+  subweather Subweather[]
+  useradd Users @relation("UseraddWeather", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdWeather")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+}
+
+model Subweather {
+  SWID Int @id @default(autoincrement())
+  class Weather @relation(fields: [Class], references: [WID])
+  Class Int
+  Name String
+  Description String
+  useradd Users @relation("UseraddSubweather", fields: [UserAdd], references: [UID])
+  UserAdd Int
+  userupd Users[] @relation("UserupdSubweather")
+  source Source @relation(fields: [Source], references: [SID])
+  Source Int
+}
+
+model Gods {
+  GID         Int @id @default(autoincrement())
+  Name        String
+  Description String
+  Weapon      String
+  character   Characters[]
+  useradd     Users @relation("UseraddGod", fields: [UserAdd], references: [UID])
+  UserAdd     Int
+  userupd     Users[] @relation("UserupdGod")
+  source      Source @relation(fields: [Source], references: [SID])
+  Source      Int
+}
+
+model Users {
+  UID Int @id @default(autoincrement())
+  Name String
+  Password String
+  Type String
+  campains GameCampains[]
+  players Players[]
+  gods Gods[] @relation("UseraddGod")
+  ugods Gods[] @relation("UserupdGod")
+  subweather Subweather[] @relation("UseraddSubweather")
+  usubweather Subweather[] @relation("UserupdSubweather")
+  weather Weather[] @relation("UseraddWeather")
+  uweather Weather[] @relation("UserupdWeather")
+  traps Traps[] @relation("UseraddTrap")
+  utraps Traps[] @relation("UserupdTrap")
+  wilderness Wilderness[] @relation("UseraddWild")
+  uwilderness Wilderness[] @relation("UserupdWild")
+  hazards Hazards[] @relation("UseraddHazard")
+  uhazards Hazards[] @relation("UserupdHazard")
+  siegeengines SiegeEngines[] @relation("UseraddSiege")
+  usiegeengines SiegeEngines[] @relation("UserupdSiege")
+  dungeonelements DungeonElements[] @relation("UseraddDE")
+  udungeonelements DungeonElements[] @relation("UserupdDE")
+  dungeontypes DungeonTypes[] @relation("UseraddDT")
+  udungeontypes DungeonTypes[] @relation("UserupdDT")
+  magicitems MagicItems[] @relation("UseraddMI")
+  umagicitems MagicItems[] @relation("UserupdMI")
+  subrules Subrules[] @relation("UseraddSubrule")
+  usubrules Subrules[] @relation("UserupdSubrule")
+  rules Rules[] @relation("UseraddRule")
+  urules Rules[] @relation("UserupdRule")
+  spells Spells[] @relation("UseraddSpell")
+  uspells Spells[] @relation("UserupdSpell")
+  magicschools MagicSchools[] @relation("UseraddMS")
+  umagicschools MagicSchools[] @relation("UserupdMS")
+  magicsubschools MagicSubschools[] @relation("UseraddMSS")
+  umagicsubschools MagicSubschools[] @relation("UserupdMSS")
+  equipment Equipment[] @relation("UseraddE")
+  uequipment Equipment[] @relation("UserupdE")
+  races Races[] @relation("UseraddRace")
+  uraces Races[] @relation("UserupdRace")
+  classes Classes[] @relation("UseraddClass")
+  uclasses Classes[] @relation("UserupdClass")
+  feats Feats[] @relation("UseraddFeat")
+  ufeats Feats[] @relation("UserupdFeat")
+  monsters Monsters[] @relation("UseraddMonster")
+  umonsters Monsters[] @relation("UserupdMonster")
+}
+
+model GameCampains {
+  GCID         Int @id @default(autoincrement())
+  Name         String
+  Description  String
+  ScenarioFile String? //link to file, optional
+  master       Users @relation(fields: [Master], references: [UID])
+  Master       Int
+  gamesessions GameSessions[]
+}
+
+model GameSessions {
+  GSID        Int @id @default(autoincrement())
+  Name        String
+  Description String
+  campain     GameCampains @relation(fields: [Campain], references: [GCID])
+  Campain     Int
+  SessionFile String? //link, optional
+  npcs        Characters[] @relation("NPCGS")
+  pcs         Characters[] @relation("PCGS")
+}
+
+model Players {
+  PID         Int @id @default(autoincrement())
+  Name        String
+  master      Users @relation(fields: [Master], references: [UID])
+  Master      Int
+  charachters Characters[]
+}
+
+model Characters {
+  CID Int @id @default(autoincrement())
+  Name String
+  parameters CharacterParameters @relation(fields: [Parameters], references: [CPID])
+  Parameters Int @unique
+  defence DefenceProps @relation(fields: [Defence], references: [DPID])
+  Defence Int @unique
+  alignment Alignments @relation(fields: [Alignment], references: [AID])
+  Alignment Int
+  player Players @relation(fields: [Player], references: [PID])
+  Player Int
+  multiclass ClassesOnCharacters[]
+  god Gods @relation(fields: [God], references: [GID])
+  God Int
+  Motherland String
+  race Races @relation(fields: [Race], references: [RID])
+  Race Int
+  Size Int
+  Gender String
+  Age Int
+  Height String
+  Weight Float
+  HairColor String
+  EyeColor String
+  Language String
+  CircumstanceModifiers String
+  SpecialCapabilities   String // mb new table
+  EXP                  Int
+  spells               Spells[]
+  gamesessionsnpc      GameSessions[] @relation("NPCGS")
+  gamesessionspc       GameSessions[] @relation("PCGS")
+  cash                 CharacterCashes?
+  speed                CharacterSpeed?
+}
+
+model CharacterCashes {
+  CCID        Int @id @default(autoincrement())
+  characterid Characters @relation(fields: [CharacterID], references: [CID])
+  CharacterID Int @unique 
+  Gold        Int
+  Silver      Int
+  Bronze      Int
+  Platinum    Int
+}
+
+model CharacterSpeed {
+  CSID         Int @id @default(autoincrement())
+  character    Characters @relation(fields: [CharacterID], references: [CID])
+  CharacterID  Int @unique
+  SpeedBase    Int
+  SpeedInArmor Int
+  SpeedFly     Int
+  SpeedSwim    Int
+  SpeedClimb   Int
+  SpeedDig     Int
+  TempSpeed    Int
+}
+
+model ClassesOnCharacters {
+  class       Classes @relation(fields: [ClassID], references: [CID])
+  ClassID     Int
+  character   Characters @relation(fields: [CharacterID], references: [CID])
+  CharacterID Int
+  Level       Int
+
+  @@id([ClassID, CharacterID])
+}

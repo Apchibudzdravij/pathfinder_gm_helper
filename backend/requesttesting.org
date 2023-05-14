@@ -1,0 +1,84 @@
+#+Title: API testing (via HTTP requests)
+#+Author: Apchibudzdravius
+
+* Prelude
+
+*"Pathfinder Game Master Helper"* (aka "PathfinderGMHelper" or "PGMH")
+
+Backend of PGMH consists of:
+- /Koa framework/ for handling HTTP requests and parsing them into queries or mutations for GraphQL and returning data from GraphQL to the client;
+- /GraphQL/ for handling queries and mutations, resolving them with the help of Prisma ORM and returning data back to Koa;
+- /Prisma/ for GraphQL resolver implementation. 
+
+** DB diagram
+
+[[../../PathfinderGMHelperDB1.jpg]]
+
+** Deployment diagram
+
+[[../../PathfinderGMHelperDeploymentDiagram.png]]
+
+** Use-case diagram
+
+[[../../PathfinderGMHelperUseCaseDiagram.jpg]]
+
+
+* HTTP requests
+
+** Not GraphQL
+
+#+name: testNonGraphQLPostRequest
+#+begin_src restclient :var port=7777
+  POST https://localhost::port/api/gql
+  Content-Type: application/json
+
+  {
+    "query": "query { getSource (Name: \"ОКП\") { SID, Name, Description } }",
+    "context": {"type": "name"}
+  }
+#+end_src
+
+#+RESULTS: testNonGraphQLPostRequest
+#+BEGIN_SRC js
+{
+  "data": {
+    "getSource": []
+  }
+}
+// POST https://localhost:7777/api/gql
+// HTTP/1.1 200 OK
+// Content-Type: application/json; charset=utf-8
+// Content-Length: 25
+// Date: Thu, 11 May 2023 06:59:02 GMT
+// Connection: keep-alive
+// Keep-Alive: timeout=5
+// Request duration: 0.183064s
+#+END_SRC
+
+
+**
+  {
+    "query": "query { getMonsters { MID, Name } }"
+    
+  }
+**
+{
+    "mutation": "mutation { setSource ( Name: \"ОКП\", Description: \"Основная книга правил (офф.)\") { SID, Name, Description } }"
+    
+  }
+**
+{
+    "mutation": "mutation { setSource ( SID: 1, Name: \"ОКП\", Description: \"Основная книга правил (неофф.)\") { SID, Name, Description } }"
+    
+  }
+**
+{
+    "query": "query { getSource (Name: \"ОКП\") { SID, Name, Description } }",
+    "context": {"type": "name"}
+  }
+**
+{
+    "mutation": "mutation { delSource ( SID: 1) { SID, Name, Description } }"
+    
+  }
+**

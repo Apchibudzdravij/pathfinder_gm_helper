@@ -1,0 +1,1209 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Source {
+  SID: ID!
+  Name: String!
+  Description: String!
+  gods: [Gods]
+  subweather: [Subweather]
+  weather: [Weather]
+  traps: [Traps]
+  wilderness: [Wilderness]
+  hazards: [Hazards]
+  siegeengines: [SiegeEngines]
+  dungeonelements: [DungeonElements]
+  dungeontypes: [DungeonTypes]
+  magicitems: [MagicItems]
+  rules: [Rules]
+  spells: [Spells]
+  magicschools: [MagicSchools]
+  magicsubschools: [MagicSubschools]
+  equipment: [Equipment]
+  races: [Races]
+  classes: [Classes]
+  feats: [Feats]
+  monsters: [Monsters] 
+}
+
+input SourceInput {
+  Name: String!
+  Description: String!
+}
+
+type Images {
+  IID: ID!
+  Link: String!
+  monsters: [Monsters]
+  monstertypes: [MonsterTypes]
+  rules: [Rules]
+  subrules: [Subrules]
+}
+
+input ImagesInput {
+  Link: String!
+}
+
+type BasicAbilities {
+  BAID: ID!
+  Name: String!
+  Description: String!
+  character: [CharacterParameters]
+  skill: [Skills]
+}
+
+input BasicAbilitiesInput {
+  Name: String!
+  Description: String!
+}
+
+type Monsters {
+  MID: ID!
+  Name: String!
+  type: [MonsterTypes]
+  CR: Int!
+  Exp: Int!
+  alignment: Alignments!
+  attack: MonsterAttackProps!
+  defence: DefenceProps!
+  parameters: CharacterParameters!
+  creation: MonsterCreation
+  ecology: MonsterEcologyProps!
+  Description: String!
+  source: Source!
+  useradd: Users!
+  userupd: [Users]
+  image: Images
+  Table: String
+}
+
+type MonsterTypes {
+  TID: ID!
+  Name: String!
+  image: Images
+  Description: String!
+  monster: [Monsters]
+}
+
+input MonsterTypesInput {
+  Name: String!
+  Image: Int
+  Description: String!
+}
+
+type MonsterAttackProps {
+  MAPID: ID!
+  Speed: String!
+  Melee: String
+  Range: String
+  SpecialAttack: String
+  SpellLikeAbilities: String
+  monster: [Monsters]
+}
+
+input MonsterAttackPropsInput {
+  Speed: String!
+  Melee: String
+  Range: String
+  SpecialAttack: String
+  SpellLikeAbilities: String
+}
+
+type MonsterEcologyProps {
+  MEPID: ID!
+  Environment: String!
+  Organization: String!
+  Treasure: String!
+  Language: String
+  monster: [Monsters]
+}
+
+input MonsterEcologyPropsInput {
+  Environment: String!
+  Organization: String!
+  Treasure: String!
+  Language: String
+}
+
+type DefenceProps {
+  DPID: ID!
+  AC: Int!
+  AC_touch: Int!
+  AC_flatfooted: Int!
+  HP: Int!
+  Fort: Int!
+  Will: Int!
+  Ref: Int!
+  DefAbilities: String
+  Immune: String
+  Resist: String
+  DR: String
+  SR: String
+  Sences: String!
+  Init: String!
+  monster: Monsters
+  character: Characters
+}
+
+input DefencePropsInput {
+  AC: Int!
+  AC_touch: Int!
+  AC_flatfooted: Int!
+  HP: Int!
+  Fort: Int!
+  Will: Int!
+  Ref: Int!
+  DefAbilities: String
+  Immune: String
+  Resist: String
+  DR: String
+  SR: String
+  Sences: String!
+  Init: String!
+}
+
+type CharacterParameters {
+  CPID: ID!
+  basicabi: BasicAbilities!
+  BAB: Int!
+  CBM: Int!
+  CMD: Int!
+  feats: [Feats]
+  items: [Equipment]
+  skills: [Skills]
+  monster: [Monsters]
+  character: [Characters]
+}
+
+input CharacterParametersInput {
+  BasicAbi: Int!
+  BAB: Int!
+  CBM: Int!
+  CMD: Int!
+}
+
+type MonsterCreation {
+  MCID: ID!
+  AC: String
+  HD: String
+  Saves: String
+  DefenceAbilities: String
+  Speed: String
+  Attack: String
+  SpecialAttack: String
+  Abilities: String
+  BAB: String
+  Skills: String
+  Feats: String
+  SpecialQualities: String
+  monster: Monsters
+}
+
+input MonsterCreationInput {
+  AC: String
+  HD: String
+  Saves: String
+  DefenceAbilities: String
+  Speed: String
+  Attack: String
+  SpecialAttack: String
+  Abilities: String
+  BAB: String
+  Skills: String
+  Feats: String
+  SpecialQualities: String
+}
+
+type FeatTypes {
+  FTID: ID!
+  Name: String!
+  Description: String!
+  feats: [Feats]
+}
+
+input FeatTypesInput {
+  Name: String!
+  Description: String!
+}
+
+type Feats {
+  FID: ID!
+  Name: String!
+  type: FeatTypes!
+  Type: Int!
+  Requirements: String
+  ShortDesc: String!
+  FullDesc: String!
+  WithoutFeat: String
+  Note: String!
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+  characterparameters: [CharacterParameters]
+}
+
+input FeatsInput {
+  Name: String!
+  type: FeatTypesInput!
+  Type: Int!
+  Requirements: String
+  ShortDesc: String!
+  FullDesc: String!
+  WithoutFeat: String
+  Note: String!
+  UserAdd: Int!
+  userupd: [UsersInput]
+  Source: Int!
+}
+
+type Alignments {
+  AID: ID!
+  Name: String!
+  Description: String!
+  monster: [Monsters]
+  class: [Classes]
+  character: [Characters]
+}
+
+input AlignmentsInput {
+  Name: String!
+  Description: String!
+}
+
+type ClassFeatures {
+  CFID: ID!
+  Name: String!
+  Description: String!
+  class: [Classes]
+}
+
+input ClassFeaturesInput {
+  Name: String!
+  Description: String!
+}
+
+type Skills {
+  SID: ID!
+  Name: String!
+  abi: BasicAbilities!
+  Abi: Int!
+  ShortDesc: String!
+  FullDesc: String!
+  class: [Classes]
+  characterparameters: [CharacterParameters] 
+}
+
+input SkillsInput {
+  Name: String!
+  Abi: Int!
+  ShortDesc: String!
+  FullDesc: String!
+}
+
+type Classes {
+  CID: ID!
+  Name: String!
+  Description: String!
+  Role: String!
+  alignment: [Alignments]
+  HD: String!
+  classskills: [Skills]
+  SkillPoints: Int!
+  features: [ClassFeatures]
+  ExClass: String!
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+  charactermulticlass: [ClassesOnCharacters]
+}
+
+input ClassesInput {
+  Name: String!
+  Description: String!
+  Role: String!
+  alignment: [AlignmentsInput]
+  HD: String!
+  classskills: [SkillsInput]
+  SkillPoints: Int!
+  features: [ClassFeaturesInput]
+  ExClass: String!
+  UserAdd: Int!
+  userupd: [UsersInput]
+  Source: Int!
+}
+
+type RaceFeatures {
+  RFID: ID!
+  Name: String!
+  Description: String!
+  race: [Races]
+}
+
+input RaceFeaturesInput {
+  Name: String!
+  Description: String!
+}
+
+type Races {
+  RID: ID!
+  Name: String!
+  ShortDesc: String!
+  FullDesc: String!
+  Society: String!
+  Relations: String!
+  AlignmentReligion: String!
+  Adventure: String!
+  NamesMale: String!
+  NameFemale: String!
+  features: [RaceFeatures]
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+  characters: [Characters]
+}
+
+input RacesInput {
+  Name: String!
+  ShortDesc: String!
+  FullDesc: String!
+  Society: String!
+  Relations: String!
+  AlignmentReligion: String!
+  Adventure: String!
+  NamesMale: String!
+  NameFemale: String!
+  features: [RaceFeaturesInput]
+  UserAdd: Int!
+  userupd: [UsersInput]
+  Source: Int!
+}
+
+type EquipmentTypes {
+  ETID: ID!
+  Name: String!
+  equipment: [Equipment]
+}
+
+input EquipmentTypesInput {
+  Name: String!
+}
+
+type Equipment {
+  EID: ID!
+  Name: String!
+  Description: String!
+  type: EquipmentTypes!
+  Price: String!
+  Wage: Int!
+  weapon: Weapons
+  armor: Armors
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+  characterparameters: [CharacterParameters]
+}
+
+input EquipmentInput {
+  Name: String!
+  Description: String!
+  Type: Int!
+  Price: String!
+  Wage: Int!
+  Weapon: Int
+  Armor: Int
+  UserAdd: Int!
+  userupd: [UsersInput]
+  Source: Int!
+}
+
+type Weapons {
+  WID: ID!
+  DamageL: String!
+  DamageNL: String!
+  Crit: String!
+  Range: Int!
+  DmgType: String!
+  Feature: String!
+  equipment: Equipment
+}
+
+input WeaponsInput {
+  DamageL: String!
+  DamageNL: String!
+  Crit: String!
+  Range: Int!
+  DmgType: String!
+  Feature: String!
+}
+
+type Armors {
+  AID: ID!
+  ArmorModifier: Int!
+  MaxDex: Int!
+  Penalty: String!
+  SpellUnsuccess: Int!
+  Speed30: Int!
+  Speed20: Int!
+  equipment: Equipment
+}
+
+input ArmorsInput {
+  ArmorModifier: Int!
+  MaxDex: Int!
+  Penalty: String!
+  SpellUnsuccess: Int!
+  Speed30: Int!
+  Speed20: Int!
+}
+
+type SpellTypes {
+  STID: ID!
+  Name: String!
+  Description: String!
+  spells: [Spells]
+}
+
+input SpellTypesInput {
+  Name: String!
+  Description: String!
+}
+
+type MagicSubschools {
+  MSID: ID!
+  Name: String!
+  Description: String!
+  school: MagicSchools!
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+  spells: [Spells]
+}
+
+input MagicSubschoolsInput {
+  Name: String!
+  Description: String!
+  School: Int!
+  UserAdd: Int!
+  userupd: [UsersInput]
+  Source: Int!
+}
+
+type MagicSchools {
+  MSID: ID!
+  Name: String!
+  Description: String!
+  subschools: [MagicSubschools]
+  spells: [Spells]
+  useradd: Users
+  userupd: [Users]
+  source: Source!
+}
+
+input MagicSchoolsInput {
+  Name: String!
+  Description: String!
+  subschools: [MagicSubschoolsInput]
+  spells: [SpellsInput]
+  UserAdd: Int!
+  userupd: [UsersInput]
+  Source: Int!
+}
+
+type SpellComponents {
+  SCID: ID!
+  Name: String!
+  Description: String!
+  spell: [Spells]
+}
+
+input SpellComponentsInput {
+  Name: String!
+  Description: String!
+}
+
+type Spells {
+  SID: ID!
+  Name: String!
+  school: MagicSchools!
+  subschool: MagicSubschools
+  Descriptors: String!
+  Circle: Int!
+  component: [SpellComponents]
+  CreationTime: String!
+  Range: Int!
+  Aim: String!
+  Durability: String!
+  SaveThrows: String!
+  SR: String!
+  ShortDesc: String!
+  FullDesc: String!
+  type: SpellTypes!
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+  characters: [Characters]
+}
+
+input SpellsInput {
+  Name: String!
+  School: Int!
+  Subschool: Int
+  Descriptors: String!
+  Circle: Int!
+  component: [SpellComponentsInput]
+  CreationTime: String!
+  Range: Int!
+  Aim: String!
+  Durability: String!
+  SaveThrows: String!
+  SR: String!
+  ShortDesc: String!
+  FullDesc: String!
+  Type: Int!
+  UserAdd: Int!
+  userupd: [UsersInput]
+  Source: Int!
+}
+
+type Rules {
+  RID: ID!
+  Name: String!
+  Description: String!
+  image: Images
+  subrule: [Subrules]
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+}
+
+input RulesInput {
+  Name: String!
+  Description: String!
+  Image: Int
+  subrule: [SubrulesInput]
+  UserAdd: Int!
+  userupd: [UsersInput]
+  Source: Int!
+}
+
+type Subrules {
+  SRID: ID!
+  rule: Rules!
+  Name: String!
+  Description: String!
+  image: Images
+  useradd: Users!
+  userupd: [Users]
+}
+
+input SubrulesInput {
+  Rule: Int!
+  Name: String!
+  Description: String!
+  Image: Int
+  UserAdd: Int!
+  userupd: [UsersInput]
+}
+
+type MagicEffects {
+  MEID: ID!
+  Name: String!
+  Description: String!
+  magicitem: [MagicItems]
+}
+
+input MagicEffectsInput {
+  Name: String!
+  Description: String!
+}
+
+type ItemCreation {
+  ICID: ID!
+  miid: MagicItems!
+  Requirements: String!
+  Price: String!
+}
+
+input ItemCreationInput {
+  MIID: Int!
+  Requirements: String!
+  Price: String!
+}
+
+type MagicItems {
+  MIID: ID!
+  Name: String!
+  Description: String!
+  effect: MagicEffects!
+  Aura: String!
+  CasterLevel: Int!
+  Category: String
+  Price: String!
+  Weight: Int!
+  itemcreation: ItemCreation
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+}
+
+type DungeonTypes {
+  DTID: ID!
+  Name: String!
+  Description: String!
+  useradd: Users!
+  UserAdd: Int!
+  userupd: [Users]
+  source: Source!
+  Source: Int!
+}
+
+input DungeonTypesOnput {
+  Name: String!
+  Description: String!
+  UserAdd: Int!
+  userupd: [UsersInput]
+  Source: Int!
+}
+
+type DungeonElements {
+  DEID: ID!
+  Name: String!
+  Description: String!
+  subelement: [DungeonSubelements]
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+}
+
+input DungeonElementsInput {
+  Name: String!
+  Description: String!
+  subelement: [DungeonSubelementsInput]
+  Useradd: Int!
+  userupd: [UsersInput]
+  Source: Int!
+}
+
+type DungeonSubelements {
+  DSID: ID!
+  Name: String!
+  Description: String!
+  element: DungeonElements!
+  Element: Int!
+}
+
+input DungeonSubelementsInput {
+  Name: String!
+  Description: String!
+  Element: Int!
+}
+
+type SiegeEngines {
+  SEID: ID!
+  Name: String!
+  Description: String!
+  Size: Int!
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+}
+
+type Hazards {
+  HID: ID!
+  Name: String!
+  Description: String!
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+}
+
+type Wilderness {
+  WID: ID!
+  Name: String!
+  Description: String!
+  wilddetail: [WildDetails]
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+}
+
+input WildernessInput {
+  Name: String!
+  Description: String!
+  wilddetail: [WildDetailsInput]
+  Useradd: Int!
+  userupd: [UsersInput]
+  Source: Int!
+}
+
+type WildDetails {
+  WDID: ID!
+  Name: String!
+  Description: String!
+  type: Wilderness!
+}
+
+input WildDetailsInput {
+  Name: String!
+  Description: String!
+  Type: Int!
+}
+
+type TrapTypes {
+  TTID: ID!
+  Name: String!
+  Description: String!
+  trap: [Traps]
+}
+
+type TrapResets {
+  TRID: ID!
+  Name: String!
+  Description: String!
+  trap: [Traps]
+}
+
+type TrapTriggers {
+  TTID: ID!
+  Name: String!
+  Description: String!
+  trap: [Traps]
+}
+
+input TrapTypesInput {
+  Name: String!
+  Description: String!
+}
+
+input TrapResetsInput {
+  Name: String!
+  Description: String!
+}
+
+input TrapTriggersInput {
+  Name: String!
+  Description: String!
+}
+
+type Traps {
+  TID: ID!
+  Name: String!
+  Description: String!
+  type: TrapTypes!
+  Type: Int!
+  Perception: String!
+  DisableDice: String!
+  trigger: TrapTriggers!
+  Trigger: Int!
+  reset: TrapResets
+  Reset: Int
+  Effect: String!
+  CR: String!
+  useradd: Users!
+  UserAdd: Int!
+  userupd: [Users]
+  source: Source!
+  Source: Int!
+}
+
+type Weather {
+  WID: ID!
+  Name: String!
+  Description: String!
+  subweather: [Subweather]
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+}
+
+input WeatherInput {
+  Name: String!
+  Description: String!
+  subweather: [SubweatherInput]
+  Useradd: Int!
+  userupd: [UsersInput]
+  Source: Int!
+}
+
+type Subweather {
+  SWID: ID!
+  class: Weather!
+  Name: String!
+  Description: String!
+  useradd: Users!
+  userupd: [Users]
+  source: Source!
+}
+
+input SubweatherInput {
+  Class: Int!
+  Name: String!
+  Description: String!
+  UserAdd: Int!
+  userupd: [UsersInput]
+  Source: Int!
+}
+
+type Gods {
+  GID:        ID!
+  Name:       String!
+  Description:String!
+  Weapon:     String!
+  character:  [Characters]
+  useradd:    Users!
+  userupd:    [Users]
+  source:     Source!
+}
+
+input GodsInput {
+  Name:       String!
+  Description:String!
+  Weapon:     String!
+  UserAdd:    Int!
+  userupd:    [UsersInput]
+  Source:     Int!
+}
+
+type Users {
+  UID: ID!
+  Name: String!
+  Password: String!
+  Type: String!
+  campains: [GameCampains]
+  players: [Players]
+  gods: [Gods]
+  ugods: [Gods]
+  subweather: [Subweather]
+  usubweather: [Subweather]
+  weather: [Weather]
+  uweather: [Weather]
+  traps: [Traps]
+  utraps: [Traps]
+  wilderness: [Wilderness]
+  uwilderness: [Wilderness]
+  hazards: [Hazards]
+  uhazards: [Hazards]
+  siegeengines: [SiegeEngines]
+  usiegeengines: [SiegeEngines]
+  dungeonelements: [DungeonElements]
+  udungeonelements: [DungeonElements]
+  dungeontypes: [DungeonTypes]
+  udungeontypes: [DungeonTypes]
+  magicitems: [MagicItems]
+  umagicitems: [MagicItems]
+  subrules: [Subrules]
+  usubrules: [Subrules]
+  rules: [Rules]
+  urules: [Rules]
+  spells: [Spells]
+  uspells: [Spells]
+  magicschools: [MagicSchools]
+  umagicschools: [MagicSchools]
+  magicsubschools: [MagicSubschools]
+  umagicsubschools: [MagicSubschools]
+  equipment: [Equipment]
+  uequipment: [Equipment]
+  races: [Races]
+  uraces: [Races]
+  classes: [Classes]
+  uclasses: [Classes]
+  feats: [Feats]
+  ufeats: [Feats]
+  monsters: [Monsters]
+  umonsters: [Monsters]
+}
+
+input UsersInput {
+  Name: String!
+  Password: String!
+  Type: String!
+}
+
+type GameCampains {
+  GCID:         ID!
+  Name:         String!
+  Description:  String!
+  ScenarioFile: String
+  master:       Users!
+  gamesessions: [GameSessions]
+}
+
+input GameCampainsInput {
+  Name:         String!
+  Description:  String!
+  ScenarioFile: String
+  Master:       Int!
+  gamesessions: [GameSessionsInput]
+}
+
+type GameSessions {
+  GSID:        ID!
+  Name:        String!
+  Description: String!
+  campain:     GameCampains!
+  SessionFile: String
+  npcs:        [Characters]
+  pcs:         [Characters]
+}
+
+input GameSessionsInput {
+  Name:        String!
+  Description: String!
+  Campain:     Int!
+  SessionFile: String
+  npcs:        [CharactersInput]
+  pcs:         [CharactersInput]
+}
+
+type Players {
+  PID:         ID!
+  Name:        String!
+  Notes:       String
+  master:      Users!
+  charachters: [Characters]
+}
+
+input PlayersInput {
+  PID:         ID!
+  Name:        String!
+  Notes:       String
+  Master:      Int!
+  charachters: [CharactersInput]
+}
+
+type Characters {
+  CID: ID!
+  Name: String!
+  parameters: CharacterParameters!
+  defence: DefenceProps!
+  alignment: Alignments!
+  player: Players
+  Player: Int
+  multiclass: [ClassesOnCharacters]
+  god: Gods!
+  Motherland: String!
+  race: Races!
+  Size: Int!
+  Gender: String!
+  Age: Int!
+  Height: String!
+  Weight: Float!
+  HairColor: String!
+  EyeColor: String!
+  Language: String!
+  CircumstanceModifiers: String!
+  SpecialCapabilities: String
+  EXP:             Int
+  spells:          [Spells]
+  gamesessionsnpc: [GameSessions]
+  gamesessionspc:  [GameSessions]
+  cash:            CharacterCashes
+  speed:           CharacterSpeed
+}
+
+input CharactersInput {
+  CID: ID!
+  Name: String!
+  Parameters: Int!
+  Defence: Int!
+  Alignment: Int!
+  Player: Int
+  multiclass: [ClassesOnCharactersInput]
+  God: Int!
+  Motherland: String!
+  Race: Int!
+  Size: Int!
+  Gender: String!
+  Age: Int!
+  Height: String!
+  Weight: Float!
+  HairColor: String!
+  EyeColor: String!
+  Language: String!
+  CircumstanceModifiers: String!
+  SpecialCapabilities: String
+  EXP:             Int
+  cash:            CharacterCashesInput
+  speed:           CharacterSpeedInput
+}
+
+type CharacterCashes {
+  CCID:        ID!
+  characterid: Characters!
+  Gold:        Int
+  Silver:      Int
+  Bronze:      Int
+  Platinum:    Int
+}
+
+input CharacterCashesInput {
+  CharacterID: Int!
+  Gold:        Int
+  Silver:      Int
+  Bronze:      Int
+  Platinum:    Int
+}
+
+type CharacterSpeed {
+  CSID:         ID!
+  character:    Characters!
+  SpeedBase:    Int!
+  SpeedInArmor: Int!
+  SpeedFly:     Int
+  SpeedSwim:    Int
+  SpeedClimb:   Int
+  SpeedDig:     Int
+  TempSpeed:    Int
+}
+
+input CharacterSpeedInput {
+  CharacterID:  Int!
+  SpeedBase:    Int!
+  SpeedInArmor: Int!
+  SpeedFly:     Int
+  SpeedSwim:    Int
+  SpeedClimb:   Int
+  SpeedDig:     Int
+  TempSpeed:    Int
+}
+
+type ClassesOnCharacters {
+  class:       Classes!
+  character:   Characters!
+  Level:       Int!
+}
+
+input ClassesOnCharactersInput {
+  ClassID:     Int!
+  CharacterID: Int!
+  Level:       Int!
+}
+
+type Query {
+  getSource(Name: String, SID: Int): [Source]
+  getImages(IID: Int): [Images]
+  getBasicAbilities(Name: String, BAID: Int): [BasicAbilities]
+  getMonsters(MID: Int, Name: String, CR: Int, Alignment: Int): [Monsters]
+  getMonsterTypes(TID: Int, Name: String): [MonsterTypes]
+  getFeatTypes(FTID: Int, Name: String): [FeatTypes]
+  getFeats(FID: Int, Name: String): [Feats]
+  getAlignments(AID: Int, Name: String): [Alignments]
+  getClassFeatures(CFID: Int, Name: String, Class: Int): [ClassFeatures]
+  getSkills(SID: Int, Name: String): [Skills]
+  getClasses(CID: Int, Name: String): [Classes]
+  getRaces(RID: Int, Name: String): [Races]
+  getEquipmentTypes(ETID: Int, Name: String): [EquipmentTypes]
+  getEquipment(EID: Int, Name: String): [Equipment]
+  getSpellTypes(STID: Int, Name: String): [SpellTypes]
+  getMagicSubschools(MSID: Int, Name: String, School: Int): [MagicSubschools]
+  getMagicSchools(MSID: Int, Name: String): [MagicSchools]
+  getSpellComponents(SCID: Int, Name: String): [SpellComponents]
+  getSpells(SID: Int, Name: String): [Spells]
+  getRules(RID: Int, Name: String): [Rules]
+  getMagicEffects(MEID: Int, Name: String): [MagicEffects]
+  getMagicItems(MIID: Int, Name: String): [MagicItems]
+  getDungeonTypes(DTID: Int, Name: String): [DungeonTypes]
+  getDungeonElements(DEID: Int, Name: String): [DungeonElements]
+  getDungeonSubelements(DSID: Int, Name: String, Element: Int): [DungeonSubelements]
+  getSiegeEngines(SEID: Int, Name: String): [SiegeEngines]
+  getHazards(HID: Int, Name: String): [Hazards]
+  getWilderness(WID: Int, Name: String): [Wilderness]
+  getWildDetails(WDID: Int, Name: String): [WildDetails]
+  getTrapTypes(TTID: Int, Name: String): [TrapTypes]
+  getTrapResets(TRID: Int, Name: String): [TrapResets]
+  getTrapTriggers(TTID: Int, Name: String): [TrapTriggers]
+  getTraps(TID: Int, Name: String): [Traps]
+  getWeather(WID: Int, Name: String): [Weather]
+  getSubweather(SWID: Int, Name: String): [Subweather]
+  getGods(GID: Int, Name: String): [Gods]
+  getUsers(Name: String!, Password: String!): [Users]
+  getGameCampains(GCID: Int, Name: String): [GameCampains]
+  getGameSessions(GSID: Int, Name: String): [GameSessions]
+  getPlayers(PID: Int, Name: String): [Players]
+  getCharacters(CID: Int, Name: String): [Characters]
+}
+
+type Mutation {
+  setSource(SID: Int, Name: String!, Description: String!): Source
+  setImage(IID: Int, Link: String!): Images
+  setBAbility(BAID: Int, Name: String!, Description: String!): BasicAbilities
+  setMonster(MID: Int, Name: String!, CR: Int!, Type: [MonsterTypesInput], Exp: Int!, Alignment: Int!, attack: MonsterAttackPropsInput!, defence: DefencePropsInput!, parameters: CharacterParametersInput!, creation: MonsterCreationInput!, ecology: MonsterEcologyPropsInput!, Description: String!, source: SourceInput, useradd: UsersInput!, image: ImagesInput, Table: String): Monsters
+  setMonsterType(TID: Int, Name: String!, Description: String!, image: ImagesInput): MonsterTypes
+  setFeatType(FTID: Int, Name: String!, Description: String!): FeatTypes
+  setFeat(FID: Int, Name: String!, Requirements: String, type: FeatTypesInput, ShortDesc: String!, FullDesc: String!, WithoutFeat: String, Note: String, useradd: UsersInput!, source: SourceInput): Feats
+  setAlignment(AID: Int, Name: String!, Description: String!): Alignments
+  setSkill(SID: Int, Name: String!, ShortDesc: String!, FullDesc: String!, abi: BasicAbilitiesInput): Skills
+  setClass(CID: Int, Name: String!, Description: String!, Role: String!, alignment: [AlignmentsInput], HD: String!, classskills: [SkillsInput], SkillPoints: Int!, features: [ClassFeaturesInput], ExClass: String!, useradd: UsersInput!, source: SourceInput!): Classes
+  setRace(RID: Int, Name: String!, ShortDesc: String!, FullDesc: String!, Society: String!, Relations: String!, AlignmentReligion: String!, Adventure: String!, NameFemale: String, NamesMale: String, features: [RaceFeaturesInput], useradd: UsersInput!, source: SourceInput!): Races
+  setEquipmentType(ETID: Int, Name: String!): EquipmentTypes
+  setEquipment(EID: Int, Name: String!, Description: String!, type: EquipmentTypesInput, Price: String, Wage: Int, weapon: WeaponsInput, armor: ArmorsInput, useradd: UsersInput, source: SourceInput): Equipment
+  setSpellType(STID: Int, Name: String!, Description: String!): SpellTypes
+  setMagicSubschool(MSID: Int, Name: String!, Description: String!, school: MagicSchoolsInput!, useradd: UsersInput!, source: SourceInput!, spells: [SpellsInput]): MagicSubschools
+  setMagicSchool(MSID: Int, Name: String!, Description: String!, subschools: [MagicSubschoolsInput], spells: [SpellsInput], useradd: UsersInput, source: SourceInput): MagicSchools
+  setSpell(SID: Int, Name: String!, Descriptors: String!, school: MagicSchoolsInput, subschool: MagicSubschoolsInput, Circle: Int!, component: [SpellComponentsInput], CreationTime: String, Range: Int, Aim: String, Durability: String, SaveThrows: String, SR: String, ShortDesc: String!, FullDesc: String!, type: SpellTypesInput, useradd: UsersInput!, source: SourceInput!): Spells
+  setRule(RID: Int, Name: String!, Description: String!, image: ImagesInput, subrules: [SubrulesInput], useradd: UsersInput!, source: SourceInput!): Rules
+  setMagicItem(MIID: Int, Name: String!, Description: String!, effect: MagicEffectsInput, Aura: String, CasterLevel: Int!, Category: String, Price: String!, Weight: Int, itemcreation: ItemCreationInput, useradd: UsersInput!, source: SourceInput!): MagicItems
+  setDungeonType(DTID: Int, Name: String!, Description: String!, useradd: UsersInput!, source: SourceInput!): DungeonTypes
+  setDungeonElement(DEID: Int, Name: String!, Description: String!, subelement: [DungeonSubelementsInput], useradd: UsersInput!, source: SourceInput!): DungeonElements
+  setDungeonSubelement(DSID: Int, Name: String!, Description: String!, element: DungeonElementsInput): DungeonSubelements
+  setSiegeEngine(SEID: Int, Name: String!, Description: String!, Size: Int!, useradd: UsersInput!, source: SourceInput!): SiegeEngines
+  setHazard(HID: Int, Name: String!, Description: String!, useradd: UsersInput!, source: SourceInput!): Hazards
+  setWilderness(WID: Int, Name: String!, Description: String!, useradd: UsersInput!, source: SourceInput!): Wilderness
+  setWildDetail(WDID: Int, Name: String!, Description: String!, type: WildernessInput): WildDetails
+  setTrapType(TTID: Int, Name: String!, Description: String!): TrapTypes
+  setTrapReset(TRID: Int, Name: String!, Description: String!): TrapResets
+  setTrapTrigger(TTID: Int, Name: String!, Description: String!): TrapTriggers
+  setTrap(TID: Int, Name: String!, Description: String!, type: TrapTypesInput, Perception: String!, DisableDice: String!, trigger: TrapTriggersInput, reset: TrapResetsInput, Effect: String, CR: String!, useradd: UsersInput!, source: SourceInput!): Traps
+  setWeather(WID: Int, Name: String!, Description: String!, useradd: UsersInput!, source: SourceInput!): Weather
+  setSubweather(SWID: Int, class: WeatherInput!, Name: String!, Description: String!, useradd: UsersInput!, source: SourceInput!): Subweather
+  setGod(GID: Int, Name: String!, Description: String!, useradd: UsersInput!, source: SourceInput!, Weapon: String!): Gods
+  setUser(UID: Int, Name: String!, Password: String, Type: String!): Users
+  setCampain(GCID: Int, Name: String!, Description: String!, ScenarioFile: String, master: UsersInput): GameCampains
+  setSession(GSID: Int, Name: String!, Description: String!, campain: GameCampainsInput, SessionFile: String, npcs: [CharactersInput], pcs: [CharactersInput]): GameSessions
+  setPlayer(PID: Int, Name: String!, master: UsersInput!, characters: [CharactersInput], Notes: String): Players
+  setCharacter(CID: Int, Name: String!, parameters: CharacterParametersInput, defence: DefencePropsInput, alignment: AlignmentsInput, player: PlayersInput, multiclass: [ClassesOnCharactersInput], god: GodsInput!, Motherland: String!, race: RacesInput!, Size: Int!, Gender: String!, Age: Int!, Height: String!, Weight: Float!, HairColor: String!, EyeColor: String!, Language: String!, CircumstanceModifiers: String, SpecialCapabilities: String, EXP: Int!, spells: [SpellsInput], cash: CharacterCashesInput!, speed: CharacterSpeedInput!): Characters
+  
+  delSource(SID: Int!): Source
+  delImages(IID: Int!): Images
+  delBasicAbilities(BAID: Int!): BasicAbilities
+  delMonsters(MID: Int!): Monsters
+  delMonsterTypes(TID: Int!): MonsterTypes
+  delFeatTypes(FTID: Int!): FeatTypes
+  delFeats(FID: Int): Feats
+  delAlignments(AID: Int): Alignments
+  delClassFeatures(CFID: Int): ClassFeatures
+  delSkills(SID: Int): Skills
+  delClasses(CID: Int): Classes
+  delRaces(RID: Int): Races
+  delEquipmentTypes(ETID: Int): EquipmentTypes
+  delEquipment(EID: Int): Equipment
+  delSpellTypes(STID: Int): SpellTypes
+  delMagicSubschools(MSID: Int): MagicSubschools
+  delMagicSchools(MSID: Int): MagicSchools
+  delSpellComponents(SCID: Int): SpellComponents
+  delSpells(SID: Int): Spells
+  delRules(RID: Int): Rules
+  delMagicEffects(MEID: Int): MagicEffects
+  delMagicItems(MIID: Int): MagicItems
+  delDungeonTypes(DTID: Int): DungeonTypes
+  delDungeonElements(DEID: Int): DungeonElements
+  delDungeonSubelements(DSID: Int): DungeonSubelements
+  delSiegeEngines(SEID: Int): SiegeEngines
+  delHazards(HID: Int): Hazards
+  delWilderness(WID: Int): Wilderness
+  delWildDetails(WDID: Int): WildDetails
+  delTrapTypes(TTID: Int): TrapTypes
+  delTrapResets(TRID: Int): TrapResets
+  delTrapTriggers(TTID: Int): TrapTriggers
+  delTraps(TID: Int): Traps
+  delWeather(WID: Int): Weather
+  delSubweather(SWID: Int): Subweather
+  delGods(GID: Int): Gods
+  delUsers(UID: Int, Name: String!, Password: String!): Users
+  delGameCampains(GCID: Int): GameCampains
+  delGameSessions(GSID: Int): GameSessions
+  delPlayers(PID: Int): Players
+  delCharacters(CID: Int): Characters
+}
