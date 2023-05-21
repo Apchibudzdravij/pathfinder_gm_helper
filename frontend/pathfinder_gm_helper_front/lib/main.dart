@@ -1,10 +1,26 @@
-import 'dart:math';
+//import 'dart:math';
+
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/io.dart';
+import 'package:pathfinder_gm_helper_front/content/environment/environment.dart';
+import 'package:pathfinder_gm_helper_front/content/environment/hazard.dart';
+import 'package:pathfinder_gm_helper_front/content/environment/weather.dart';
+import 'package:pathfinder_gm_helper_front/content/environment/wilddetail.dart';
+import 'package:pathfinder_gm_helper_front/content/personal/campain.dart';
+import 'package:pathfinder_gm_helper_front/content/personal/personalarea.dart';
+import 'package:pathfinder_gm_helper_front/content/personal/session.dart';
 import 'package:provider/provider.dart';
 
 import 'package:pathfinder_gm_helper_front/content/signin.dart';
+import 'package:pathfinder_gm_helper_front/content/monsters.dart';
+import 'package:pathfinder_gm_helper_front/content/environment/wilderness.dart';
+
+import 'content/environment/subweather.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,49 +47,96 @@ class MyApp extends StatelessWidget {
 class MyAppPageState extends ChangeNotifier {
   var stateOfMain = 'tableMain';
 
-  void setStateOfMain(String nesWtate) {
+  Future<void> setStateOfMain(String nesWtate) async {
     stateOfMain = nesWtate;
+    envname = '';
+    envdesc = '';
+    envsrc = '';
+    swid = -1;
+    notifyListeners();
+  }
+
+  void setStateOfMainForEnvUpdate(
+      String nesWtate, String name, String description, String source) {
+    stateOfMain = nesWtate;
+    envname = name;
+    envdesc = description;
+    envsrc = source;
+    notifyListeners();
+  }
+
+  var uid = -1;
+  var name = '';
+  var type = '';
+
+  var pid = -1;
+  var swid = -1;
+
+  var envname = '';
+  var envdesc = '';
+  var envsrc = '';
+
+  void setUser(String name, int uid, String type) {
+    this.uid = uid;
+    this.name = name;
+    this.type = type;
+    if (this.uid != -1) {
+      this.stateOfMain = 'tableMain';
+    }
     notifyListeners();
   }
 }
 
-class MyUserState extends ChangeNotifier {
-  var uid = -1;
-  var name = '';
-
-  void setUser(String name, int user) {
-    user = user;
-    name = name;
-  }
-}
-
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   MyHomePage({super.key, required this.title});
   final String title;
 
-  void _incrementCounter() {
-    print('ok');
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  String message = '';
+  late WebSocketChannel channel;
+
+  @override
+  void dispose() {
+    channel.sink.close();
+    super.dispose();
   }
 
-  String message = '';
+  @override
+  void initState() {
+    super.initState();
+    connectToWebSocket();
+  }
+
+  void connectToWebSocket() {
+    channel = IOWebSocketChannel.connect('wss://localhost:7777/');
+    channel.stream.listen((message) {
+      print('Received message: $message');
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppPageState>();
     var stateOfMain = appState.stateOfMain;
+
     Widget page;
     switch (stateOfMain) {
       case "tableMain":
-        page = TableMainPage();
+        //page = TableMainPage();
+        page = EnvironmentApp();
         break;
       case "login":
         page = LogIn();
         break;
       case "monsters":
-        page = Placeholder();
+        page = MonstersApp();
         break;
       case "environment":
-        page = Placeholder();
+        page = EnvironmentApp();
         break;
       case "charachterCreation":
         page = Placeholder();
@@ -87,9 +150,120 @@ class MyHomePage extends StatelessWidget {
       case "rules":
         page = Placeholder();
         break;
+      case "myRoom":
+        page = PersonalArea();
+        break;
+      case "addHazard":
+        page = AddHazard(
+            name: appState.envname,
+            desc: appState.envdesc,
+            src: appState.envsrc);
+        break;
+      case "showHazard":
+        page = ShowHazard();
+        break;
+      case "addWeather":
+        page = AddWeather(
+            name: appState.envname,
+            desc: appState.envdesc,
+            src: appState.envsrc);
+        break;
+      case "showWeather":
+        page = ShowWeather();
+        break;
+      case "addSubWeather":
+        page = AddSubWeather(
+            name: appState.envname,
+            desc: appState.envdesc,
+            src: appState.envsrc);
+        break;
+      case "addWilderness":
+        page = AddWilderness(
+            name: appState.envname,
+            desc: appState.envdesc,
+            src: appState.envsrc);
+        break;
+      case "showWilderness":
+        page = ShowWilderness();
+        break;
+      case "addWildDetail":
+        page = AddWildDetail(name: appState.envname, desc: appState.envdesc);
+        break;
+      case "addCampain":
+        page = AddCampain(name: appState.envname, desc: appState.envdesc);
+        break;
+      case "showCampain":
+        page = ShowCampain();
+        break;
+      case "addSession":
+        page = AddSession(name: appState.envname, desc: appState.envdesc);
+        break;
       default:
         throw UnimplementedError('KMP - unimplemented state $stateOfMain');
     }
+
+    Future<void> sendGraphQLAddRequests(
+        BuildContext context, String message) async {
+      var url = Uri.parse('https://localhost:7777/api/gql');
+      var mutation;
+      if (appState.uid == -1)
+        mutation = '''
+    mutation {
+      setRequest(Message: "${Uri.encodeComponent(message)}",
+      State: "new"
+      ) {
+        Message
+        State
+      }
+    }
+  ''';
+      else
+        mutation = '''
+    mutation {
+      setRequest(Message: "${Uri.encodeComponent(message)}",
+      State: "new", Sender: ${appState.uid}
+      ) {
+        Message
+        State
+        Sender
+      }
+    }
+  ''';
+
+      var body = json.encode({'mutation': mutation});
+      print(body);
+      try {
+        var response = await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: body,
+        );
+
+        if (response.statusCode == 200) {
+          var data = json.decode(response.body);
+
+          if (data.containsKey('error')) {
+            throw Error();
+          } else {
+            if (data['data']['setRequest']['State']) {
+              throw Error();
+            }
+            showAlert(context, 'Запрос успешно отправлен!', 'Успех');
+          }
+        } else {
+          print('Request failed with status: ${response.statusCode}');
+          throw Error();
+        }
+      } catch (e) {
+        // Error occurred
+        print('Error: $e');
+        showAlert(
+            context,
+            'Невозможно отправить запрос - проверьте соединение с интернетом, или сервер временно недоступен',
+            'Ошибка');
+      }
+    }
+
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 80,
@@ -101,23 +275,52 @@ class MyHomePage extends StatelessWidget {
               appState.setStateOfMain('tableMain');
             },
             child: Text(
-              this.title,
+              this.widget.title,
               textScaleFactor: 1.4,
             ),
           ),
         ),
         actions: [
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: IconButton.filledTonal(
-              onPressed: () {
-                appState.setStateOfMain('login');
-              },
-              icon: const Icon(Icons.face),
-              iconSize: 45.0,
-              tooltip: 'Войти',
+          if (appState.uid == -1)
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: IconButton.filledTonal(
+                onPressed: () {
+                  appState.setStateOfMain('login');
+                },
+                icon: const Icon(Icons.face),
+                iconSize: 45.0,
+                tooltip: 'Войти',
+              ),
             ),
-          ),
+          if (appState.uid != -1)
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: IconButton.filledTonal(
+                onPressed: () {
+                  appState.setStateOfMain('myRoom');
+                },
+                icon: const Icon(Icons.home),
+                iconSize: 45.0,
+                tooltip: 'Личный кабинет',
+              ),
+            ),
+          if (appState.uid != -1)
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: IconButton.filledTonal(
+                onPressed: () {
+                  //appState.setStateOfMain('tableMain');
+                  appState.setUser('', -1, '');
+                  if (stateOfMain == 'myRoom') {
+                    appState.setStateOfMain('tableMain');
+                  }
+                },
+                icon: const Icon(Icons.exit_to_app),
+                iconSize: 45.0,
+                tooltip: 'Выйти',
+              ),
+            ),
         ],
       ),
       body: SafeArea(
@@ -142,10 +345,6 @@ class MyHomePage extends StatelessWidget {
                 ),
                 onChanged: (value) {
                   message = value;
-                  print('Введен текст: $value');
-                },
-                onSubmitted: (value) {
-                  print('Отправлен текст: $value');
                 },
               ),
             ),
@@ -161,6 +360,8 @@ class MyHomePage extends StatelessWidget {
         onSelected: (value) {
           if (value == 2) {
             print(message);
+            sendGraphQLAddRequestRequest(context, message, appState.uid);
+            //_showToast(context, message);
             message = '';
           }
         },
@@ -259,5 +460,111 @@ class TableMainPage extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+void _showToast(BuildContext context, String message) {
+  final scaffold = ScaffoldMessenger.of(context);
+  scaffold.showSnackBar(
+    SnackBar(
+      backgroundColor: Colors.transparent, // Прозрачный фон SnackBar
+      elevation: 0, // Нет тени
+      content: Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          SizedBox(
+            width: MediaQuery.of(context).size.width / 3,
+            child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(5.0), // Закругленные края
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: Text(
+                      message,
+                      textAlign: TextAlign.justify,
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {},
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Color.fromRGBO(240, 255, 240, 1)),
+                        child: Text('Принять'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          scaffold.hideCurrentSnackBar();
+                        },
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: Color.fromRGBO(255, 240, 240, 1)),
+                        child: Text('Пропустить'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Future<void> sendGraphQLAddRequestRequest(
+    BuildContext context, String message, int user) async {
+  var url = Uri.parse('https://localhost:7777/api/gql');
+  var mutation = '''
+    mutation {
+      setRequest(
+        Message: "${Uri.encodeComponent(message)}",
+        State: "New",
+        Sender: $user
+      ) {
+        RID
+        Message
+        State
+      }
+    }
+  ''';
+
+  var body = json.encode({'mutation': mutation});
+  print(body);
+  try {
+    var response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+
+      if (data.containsKey('error')) {
+        throw Error();
+      } else {
+        var name = data['data']['setRequest']['Message'];
+        print(name);
+        showAlert(context, 'Запрос "$name" успешно отправлен!', 'Успех');
+        return;
+      }
+    } else {
+      print('Request failed with status: ${response.statusCode}');
+      throw Error();
+    }
+  } catch (e) {
+    // Error occurred
+    print('Error: $e');
+    showAlert(
+        context,
+        'Невозможно отправить запрос - проверьте соединение с интернетом, или сервер временно недоступен',
+        'Ошибка');
+    return;
   }
 }

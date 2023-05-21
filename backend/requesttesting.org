@@ -33,8 +33,8 @@ Backend of PGMH consists of:
   Content-Type: application/json
 
   {
-    "query": "query { getSource (Name: \"ОКП\") { SID, Name, Description } }",
-    "context": {"type": "name"}
+    "query": "query { getRequests  { RID Message Sender resolver { UID Name } } }",
+    "context": {"type": "user"}
   }
 #+end_src
 
@@ -42,17 +42,38 @@ Backend of PGMH consists of:
 #+BEGIN_SRC js
 {
   "data": {
-    "getSource": []
+    "getRequests": [
+      {
+        "RID": "6",
+        "Message": "Rar",
+        "Sender": -1,
+        "resolver": null
+      },
+      {
+        "RID": "7",
+        "Message": "Zip",
+        "Sender": 2,
+        "resolver": null
+      },
+      {
+        "RID": "8",
+        "Message": "Ahaha",
+        "Sender": 4,
+        "resolver": null
+      }
+    ]
   }
 }
 // POST https://localhost:7777/api/gql
 // HTTP/1.1 200 OK
+// Vary: Origin
+// Access-Control-Allow-Origin: 
 // Content-Type: application/json; charset=utf-8
-// Content-Length: 25
-// Date: Thu, 11 May 2023 06:59:02 GMT
+// Content-Length: 194
+// Date: Sat, 20 May 2023 11:58:38 GMT
 // Connection: keep-alive
 // Keep-Alive: timeout=5
-// Request duration: 0.183064s
+// Request duration: 0.695112s
 #+END_SRC
 
 
@@ -82,3 +103,9 @@ Backend of PGMH consists of:
     
   }
 **
+
+#+name: testNonGraphQLPostRequest
+#+begin_src restclient :var port=7757
+  POST wss://localhost::port/api/gql
+  
+#+end_src

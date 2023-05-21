@@ -23,7 +23,68 @@ const prisma = new PrismaClient({ /// TODO: remove prisma logging!
     ]
 });
 
+const subscribers = [];
+const onRequestUpdates = (fn) => subscribers.push(fn);
+const RequestsSubscriptionPayload = {
+    subscribe: (parent, args, {
+        pubsub
+    }) => {
+        const channel = Math.random().toString(36).slice(2, 15);
+        onRequestUpdates(() => pubsub.publish(channel, {}));
+        setTimeout(() => pubsub.publish(channel, {}), 0);
+        return pubsub.asyncIterator(channel);
+    }
+};
+
 const resolver = {
+
+    getUserMemory: async (args, context) => {
+        let answer;
+        if (args.TableID)
+            answer = await prisma.UserMemory.findMany({
+                where: {
+                    AND: [{
+                        UID: args.UID
+                    }, {
+                        TableID: args.TableID
+                    }, {
+                        TableName: args.TableName
+                    }]
+                }
+            });
+        else
+            answer = await prisma.UserMemory.findMany({
+                where: {
+                    UID: args.UID
+                }
+            });
+        console.log(answer);
+        return answer;
+    },
+
+    getRequests: async (args, context) => {
+        let answer;
+        if (args.State) {
+            answer = await prisma.Requests.findMany({
+                take: 75,
+                where: {
+                    State: args.State
+                },
+                include: {
+                    resolvers: true
+                }
+            });
+        } else {
+            answer = await prisma.Requests.findMany({
+                take: 75,
+                include: {
+                    resolver: true
+                }
+            });
+        }
+        console.log(answer);
+        return answer;
+    },
 
     getSource: async (args, context) => {
         let answer;
@@ -700,8 +761,23 @@ const resolver = {
         switch (context.type) {
             case 'name':
                 answer = await prisma.Hazards.findMany({
+                    take: 25,
                     where: {
-                        Name: args.Name
+                        OR: [{
+                                Name: {
+                                    contains: decodeURIComponent(args.Name)
+                                }
+                            },
+                            {
+                                Name: {
+                                    contains: decodeURIComponent(args.Name).toUpperCase()
+                                }
+                            }, {
+                                Name: {
+                                    contains: decodeURIComponent(args.Name).toLowerCase()
+                                }
+                            }
+                        ]
                     }
                 });
                 break;
@@ -709,6 +785,9 @@ const resolver = {
                 answer = await prisma.Hazards.findMany({
                     where: {
                         HID: args.HID
+                    },
+                    include: {
+                        source: true
                     }
                 });
                 break;
@@ -725,8 +804,47 @@ const resolver = {
         switch (context.type) {
             case 'name':
                 answer = await prisma.Wilderness.findMany({
+                    take: 25,
                     where: {
-                        Name: args.Name
+                        OR: [{
+                                Name: {
+                                    contains: decodeURIComponent(args.Name)
+                                }
+                            },
+                            {
+                                Name: {
+                                    contains: decodeURIComponent(args.Name).toUpperCase()
+                                }
+                            }, {
+                                Name: {
+                                    contains: decodeURIComponent(args.Name).toLowerCase()
+                                }
+                            }, {
+                                wilddetail: {
+                                    some: {
+                                        Name: {
+                                            contains: decodeURIComponent(args.Name)
+                                        }
+                                    }
+                                }
+                            }, {
+                                wilddetail: {
+                                    some: {
+                                        Name: {
+                                            contains: decodeURIComponent(args.Name).toLowerCase()
+                                        }
+                                    }
+                                }
+                            }, {
+                                wilddetail: {
+                                    some: {
+                                        Name: {
+                                            contains: decodeURIComponent(args.Name).toUpperCase()
+                                        }
+                                    }
+                                }
+                            }
+                        ]
                     }
                 });
                 break;
@@ -734,6 +852,10 @@ const resolver = {
                 answer = await prisma.Wilderness.findMany({
                     where: {
                         WID: args.WID
+                    },
+                    include: {
+                        source: true,
+                        wilddetail: true
                     }
                 });
                 break;
@@ -875,8 +997,47 @@ const resolver = {
         switch (context.type) {
             case 'name':
                 answer = await prisma.Weather.findMany({
+                    take: 25,
                     where: {
-                        Name: args.Name
+                        OR: [{
+                                Name: {
+                                    contains: decodeURIComponent(args.Name)
+                                }
+                            },
+                            {
+                                Name: {
+                                    contains: decodeURIComponent(args.Name).toUpperCase()
+                                }
+                            }, {
+                                Name: {
+                                    contains: decodeURIComponent(args.Name).toLowerCase()
+                                }
+                            }, {
+                                subweather: {
+                                    some: {
+                                        Name: {
+                                            contains: decodeURIComponent(args.Name)
+                                        }
+                                    }
+                                }
+                            }, {
+                                subweather: {
+                                    some: {
+                                        Name: {
+                                            contains: decodeURIComponent(args.Name).toLowerCase()
+                                        }
+                                    }
+                                }
+                            }, {
+                                subweather: {
+                                    some: {
+                                        Name: {
+                                            contains: decodeURIComponent(args.Name).toUpperCase()
+                                        }
+                                    }
+                                }
+                            }
+                        ]
                     }
                 });
                 break;
@@ -884,6 +1045,10 @@ const resolver = {
                 answer = await prisma.Weather.findMany({
                     where: {
                         WID: args.WID
+                    },
+                    include: {
+                        source: true,
+                        subweather: true,
                     }
                 });
                 break;
@@ -947,15 +1112,14 @@ const resolver = {
 
     getUsers: async (args, context) => {
         let answer;
-        let hashpass = crypto.createHash('md5').update(args.password).digest('hex');
+        console.log(args.Name, args.Password);
+        //let hashpass = crypto.createHash('md5').update(args.password).digest('hex');
         switch (context.type) {
             default:
-                answer = await prisma.Source.findMany({
+                answer = await prisma.Users.findMany({
                     where: {
-                        AND: {
-                            Name: args.Name,
-                            Password: hashpass
-                        }
+                        Name: decodeURIComponent(args.Name),
+                        Password: decodeURIComponent(args.Password) //hashpass
                     }
                 });
                 break;
@@ -967,10 +1131,14 @@ const resolver = {
     getGameCampains: async (args, context) => {
         let answer;
         switch (context.type) {
-            case 'name':
+            case 'user':
                 answer = await prisma.GameCampains.findMany({
+                    take: 25,
                     where: {
-                        Name: args.Name
+                        Master: args.Master
+                    },
+                    include: {
+                        gamesessions: true
                     }
                 });
                 break;
@@ -978,6 +1146,9 @@ const resolver = {
                 answer = await prisma.GameCampains.findMany({
                     where: {
                         GCID: args.GCID
+                    },
+                    include: {
+                        gamesessions: true,
                     }
                 });
                 break;
@@ -1060,6 +1231,72 @@ const resolver = {
                 answer = await prisma.Characters.findMany();
                 break;
         }
+        console.log(answer);
+        return answer;
+    },
+
+    setUserMemory: async (args, context) => {
+        let answer;
+        if (args.UMID)
+            answer = await prisma.UserMemory.update({
+                data: {
+                    UID: args.UID,
+                    TableName: decodeURIComponent(args.TableName),
+                    TableID: args.TableID,
+                    Name: decodeURIComponent(args.Name)
+                },
+                where: {
+                    UMID: args.UMID
+                }
+            });
+        else
+            answer = await prisma.UserMemory.create({
+                data: {
+                    UID: args.UID,
+                    TableName: decodeURIComponent(args.TableName),
+                    TableID: args.TableID,
+                    Name: decodeURIComponent(args.Name)
+                }
+            });
+        console.log(answer);
+        return answer;
+    },
+
+    setRequest: async (args, context) => {
+        let answer;
+        if (args.Sender)
+            answer = await prisma.Requests.create({
+                data: {
+                    Message: decodeURIComponent(args.Message),
+                    State: args.State,
+                    Sender: args.Sender
+                }
+            });
+        else if (args.resolver) {
+            answer = await prisma.Requests.update({
+                data: {
+                    resolver: {
+                        connect: {
+                            UID: args.resolver.UID
+                        }
+                    },
+                    State: args.State
+                },
+                where: {
+                    RID: args.RID
+                },
+                include: {
+                    resolver: true
+                }
+            });
+        } else
+            answer = await prisma.Requests.create({
+                data: {
+                    Message: decodeURIComponent(args.Message),
+                    State: args.State
+                }
+            });
+        subscribers.forEach((fn) => fn());
         console.log(answer);
         return answer;
     },
@@ -1552,7 +1789,28 @@ const resolver = {
         let answer = null;
         if (args.HID) {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    source: {
+                        connectOrCreate: {
+                            where: {
+                                Name: args.source.Name
+                            },
+                            create: {
+                                Name: args.source.Name
+                            }
+                        }
+                    },
+                    userupd: {
+                        connect: {
+                            Name: args.useradd.Name
+                        }
+                    }
+                },
+                include: {
+                    sources: true,
+                }
             };
             upsertParams.where = {
                 HID: args.HID
@@ -1560,7 +1818,29 @@ const resolver = {
             answer = await prisma.Hazards.update(upsertParams);
         } else {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    source: {
+                        connectOrCreate: {
+                            where: {
+                                Name: args.source.Name
+                            },
+                            create: {
+                                Name: args.source.Name
+                            }
+                        }
+                    },
+                    useradd: {
+                        connect: {
+                            Name: args.useradd.Name
+                        }
+                    }
+                },
+                include: {
+                    source: true,
+                    useradd: true,
+                }
             };
             answer = await prisma.Hazards.create(upsertParams);
         }
@@ -1573,7 +1853,30 @@ const resolver = {
         let answer = null;
         if (args.WID) {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    source: {
+                        connectOrCreate: {
+                            where: {
+                                Name: decodeURIComponent(args.source.Name)
+                            },
+                            create: {
+                                Name: decodeURIComponent(args.source.Name)
+                            }
+                        },
+                    },
+                    userupd: {
+                        connect: {
+                            Name: decodeURIComponent(args.useradd.Name)
+                        }
+                    }
+                },
+                include: {
+                    wilddetail: true,
+                    source: true,
+                    userupd: true,
+                }
             };
             upsertParams.where = {
                 WID: args.WID
@@ -1581,7 +1884,30 @@ const resolver = {
             answer = await prisma.Wilderness.update(upsertParams);
         } else {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    source: {
+                        connectOrCreate: {
+                            where: {
+                                Name: decodeURIComponent(args.source.Name)
+                            },
+                            create: {
+                                Name: decodeURIComponent(args.source.Name)
+                            }
+                        },
+                    },
+                    useradd: {
+                        connect: {
+                            Name: decodeURIComponent(args.useradd.Name)
+                        }
+                    }
+                },
+                include: {
+                    source: true,
+                    wilddetail: true,
+                    useradd: true
+                }
             };
             answer = await prisma.Wilderness.create(upsertParams);
         }
@@ -1594,7 +1920,15 @@ const resolver = {
         let answer = null;
         if (args.WDID) {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    type: {
+                        connect: {
+                            WID: args.type.WID
+                        }
+                    }
+                }
             };
             upsertParams.where = {
                 WDID: args.WDID
@@ -1602,7 +1936,15 @@ const resolver = {
             answer = await prisma.WildDetails.update(upsertParams);
         } else {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    type: {
+                        connect: {
+                            WID: args.type.WID
+                        }
+                    }
+                }
             };
             answer = await prisma.WildDetails.create(upsertParams);
         }
@@ -1699,7 +2041,30 @@ const resolver = {
         let answer = null;
         if (args.WID) {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    source: {
+                        connectOrCreate: {
+                            where: {
+                                Name: decodeURIComponent(args.source.Name)
+                            },
+                            create: {
+                                Name: decodeURIComponent(args.source.Name)
+                            }
+                        },
+                    },
+                    userupd: {
+                        connect: {
+                            Name: decodeURIComponent(args.useradd.Name)
+                        }
+                    }
+                },
+                include: {
+                    subweather: true,
+                    source: true,
+                    userupd: true,
+                }
             };
             upsertParams.where = {
                 WID: args.WID
@@ -1707,7 +2072,29 @@ const resolver = {
             answer = await prisma.Weather.update(upsertParams);
         } else {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    source: {
+                        connectOrCreate: {
+                            where: {
+                                Name: decodeURIComponent(args.source.Name)
+                            },
+                            create: {
+                                Name: decodeURIComponent(args.source.Name)
+                            }
+                        },
+                    },
+                    useradd: {
+                        connect: {
+                            Name: decodeURIComponent(args.useradd.Name)
+                        }
+                    }
+                },
+                include: {
+                    source: true,
+                    subweather: true
+                }
             };
             answer = await prisma.Weather.create(upsertParams);
         }
@@ -1720,7 +2107,30 @@ const resolver = {
         let answer = null;
         if (args.SWID) {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    source: {
+                        connectOrCreate: {
+                            where: {
+                                Name: decodeURIComponent(args.source.Name)
+                            },
+                            create: {
+                                Name: decodeURIComponent(args.source.Name)
+                            }
+                        },
+                    },
+                    class: {
+                        connect: {
+                            WID: args.class.WID
+                        }
+                    },
+                    useradd: {
+                        connect: {
+                            Name: decodeURIComponent(args.useradd.Name)
+                        }
+                    }
+                }
             };
             upsertParams.where = {
                 SWID: args.SWID
@@ -1728,7 +2138,33 @@ const resolver = {
             answer = await prisma.Subweather.update(upsertParams);
         } else {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    source: {
+                        connectOrCreate: {
+                            where: {
+                                Name: decodeURIComponent(args.source.Name)
+                            },
+                            create: {
+                                Name: decodeURIComponent(args.source.Name)
+                            }
+                        },
+                    },
+                    class: {
+                        connect: {
+                            WID: args.class.WID
+                        }
+                    },
+                    useradd: {
+                        connect: {
+                            Name: decodeURIComponent(args.useradd.Name)
+                        }
+                    }
+                },
+                include: {
+                    source: true
+                }
             };
             answer = await prisma.Subweather.create(upsertParams);
         }
@@ -1762,7 +2198,11 @@ const resolver = {
         let answer = null;
         if (args.UID) {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Password: decodeURIComponent(args.Password),
+                    Type: args.Type
+                }
             };
             upsertParams.where = {
                 UID: args.UID
@@ -1770,7 +2210,11 @@ const resolver = {
             answer = await prisma.Users.update(upsertParams);
         } else {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Password: decodeURIComponent(args.Password),
+                    Type: args.Type
+                }
             };
             answer = await prisma.Users.create(upsertParams);
         }
@@ -1783,7 +2227,19 @@ const resolver = {
         let answer = null;
         if (args.GCID) {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    master: {
+                        connect: {
+                            Name: decodeURIComponent(args.master.Name)
+                        }
+                    }
+                },
+                include: {
+                    gamesessions: true,
+                    master: true,
+                }
             };
             upsertParams.where = {
                 GCID: args.GCID
@@ -1791,7 +2247,19 @@ const resolver = {
             answer = await prisma.GameCampains.update(upsertParams);
         } else {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    master: {
+                        connect: {
+                            Name: decodeURIComponent(args.master.Name)
+                        }
+                    }
+                },
+                include: {
+                    gamesessions: true,
+                    master: true,
+                }
             };
             answer = await prisma.GameCampains.create(upsertParams);
         }
@@ -1804,7 +2272,15 @@ const resolver = {
         let answer = null;
         if (args.GSID) {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    campain: {
+                        connect: {
+                            GCID: args.campain.GCID
+                        }
+                    }
+                }
             };
             upsertParams.where = {
                 GSID: args.GSID
@@ -1812,7 +2288,15 @@ const resolver = {
             answer = await prisma.GameSessions.update(upsertParams);
         } else {
             upsertParams = {
-                data: args
+                data: {
+                    Name: decodeURIComponent(args.Name),
+                    Description: decodeURIComponent(args.Description),
+                    campain: {
+                        connect: {
+                            GCID: args.campain.GCID
+                        }
+                    }
+                }
             };
             answer = await prisma.GameSessions.create(upsertParams);
         }
@@ -1858,6 +2342,40 @@ const resolver = {
             };
             answer = await prisma.Characters.create(upsertParams);
         }
+        console.log(answer);
+        return answer;
+    },
+
+    delUserMemory: async (args, context) => {
+        let temp = await prisma.UserMemory.findFirst({
+            where: {
+                AND: [{
+                        UID: args.UID
+                    },
+                    {
+                        TableID: args.TableID
+                    },
+                    {
+                        TableName: decodeURIComponent(args.TableName)
+                    }
+                ]
+            }
+        });
+        let answer = await prisma.UserMemory.delete({
+            where: {
+                UMID: temp.UMID
+            }
+        });
+        console.log(answer);
+        return answer;
+    },
+
+    delRequest: async (args, context) => {
+        let answer = await prisma.Requests.delete({
+            where: {
+                RID: args.RID
+            }
+        });
         console.log(answer);
         return answer;
     },
@@ -2270,7 +2788,21 @@ const resolver = {
         });
         console.log(answer);
         return answer;
-    }
+    },
+
+    /*newRequest: {
+        subscribe: () => prisma.requests.findMany(), // Подписываемся на все новые записи в таблице Requests
+        resolve: (payload) => payload, // Отправляем полученные данные в клиент
+    },*/
+    requests: {
+        resolve: (payload) => payload,
+        subscribe: () => pubsub.asyncIterator('requests'),
+
+    },
+    /*updatedRequest: {
+        subscribe: () => prisma.$subscribe.requests(), // Подписываемся на изменения в таблице Requests
+        resolve: (payload) => payload, // Отправляем полученные данные в клиент
+    }*/
 
 };
 

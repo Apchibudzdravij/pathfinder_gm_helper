@@ -12,8 +12,8 @@ datasource db {
 
 model Source {
   SID Int @id @default(autoincrement())
-  Name String
-  Description String
+  Name String @unique
+  Description String?
   gods Gods[]
   subweather Subweather[]
   weather Weather[]
@@ -46,7 +46,7 @@ model Images {
 
 model BasicAbilities {
   BAID Int @id @default(autoincrement())
-  Name String
+  Name String @unique
   Description String
   character CharacterParameters[]
   skill Skills[]
@@ -83,7 +83,7 @@ model Monsters {
 
 model MonsterTypes {
   TID Int @default(autoincrement()) @id
-  Name String
+  Name String @unique
   image Images? @relation(fields: [Image], references: [IID])
   Image Int?
   Description String
@@ -203,7 +203,7 @@ model ClassFeatures {
 
 model Skills {
   SID Int @id @default(autoincrement())
-  Name String
+  Name String @unique
   abi BasicAbilities @relation(fields: [Abi], references: [BAID])
   Abi Int
   ShortDesc String
@@ -214,7 +214,7 @@ model Skills {
 
 model Classes {
   CID Int @id @default(autoincrement())
-  Name String
+  Name String @unique
   Description String
   Role String
   alignment Alignments[]
@@ -240,7 +240,7 @@ model RaceFeatures {
 
 model Races {
   RID Int @id @default(autoincrement())
-  Name String
+  Name String @unique
   ShortDesc String
   FullDesc String
   Society String
@@ -481,7 +481,7 @@ model SiegeEngines {
 
 model Hazards {
   HID Int @id @default(autoincrement())
-  Name String
+  Name String @unique
   Description String
   useradd Users @relation("UseraddHazard", fields: [UserAdd], references: [UID])
   UserAdd Int
@@ -492,7 +492,7 @@ model Hazards {
 
 model Wilderness {
   WID Int @id @default(autoincrement())
-  Name String
+  Name String @unique
   Description String
   wilddetail WildDetails[]
   useradd Users @relation("UseraddWild", fields: [UserAdd], references: [UID])
@@ -504,7 +504,7 @@ model Wilderness {
 
 model WildDetails {
   WDID Int @id @default(autoincrement())
-  Name String
+  Name String @unique
   Description String
   type Wilderness @relation(fields: [Type], references: [WID])
   Type Int
@@ -568,7 +568,7 @@ model Subweather {
   SWID Int @id @default(autoincrement())
   class Weather @relation(fields: [Class], references: [WID])
   Class Int
-  Name String
+  Name String @unique
   Description String
   useradd Users @relation("UseraddSubweather", fields: [UserAdd], references: [UID])
   UserAdd Int
@@ -592,7 +592,7 @@ model Gods {
 
 model Users {
   UID Int @id @default(autoincrement())
-  Name String
+  Name String @unique
   Password String
   Type String
   campains GameCampains[]
@@ -637,11 +637,12 @@ model Users {
   ufeats Feats[] @relation("UserupdFeat")
   monsters Monsters[] @relation("UseraddMonster")
   umonsters Monsters[] @relation("UserupdMonster")
+  requests Requests[] 
 }
 
 model GameCampains {
   GCID         Int @id @default(autoincrement())
-  Name         String
+  Name         String @unique
   Description  String
   ScenarioFile String? //link to file, optional
   master       Users @relation(fields: [Master], references: [UID])
@@ -666,6 +667,23 @@ model Players {
   master      Users @relation(fields: [Master], references: [UID])
   Master      Int
   charachters Characters[]
+}
+
+model UserMemory {
+  UMID      Int @id @default(autoincrement())
+  UID       Int
+  TableID   Int
+  TableName String
+  Name      String
+}
+
+model Requests {
+  RID      Int @id @default(autoincrement())
+  Sender   Int?
+  Message  String
+  State    String
+  resolver Users? @relation(fields: [Resolver], references: [UID])
+  Resolver Int?
 }
 
 model Characters {

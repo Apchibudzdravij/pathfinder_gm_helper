@@ -1,12 +1,18 @@
 const https = require('https');
 const http = require('http');
 const Koa = require('koa');
+const cors = require('@koa/cors');
 const sslify = require('koa-sslify').default;
 const Router = require('@koa/router');
 const Logger = require('koa-logger');
 const {
     koaBody
 } = require('koa-body');
+const SocketIO = require('socket.io');
+const WebSocket = require('ws');
+const {
+    Server
+} = require('ws');
 
 const {
     graphql,
@@ -18,9 +24,9 @@ const fs = require('fs');
 
 const port = 7777;
 const options = {
-    key: fs.readFileSync('../SSL/key.pem'),
-    cert: fs.readFileSync('../SSL/cert.pem'),
-    passphrase: fs.readFileSync('../SSL/key.txt').toString(),
+    key: fs.readFileSync('../SSL/localhost-key.pem'),
+    cert: fs.readFileSync('../SSL/localhost.pem'),
+    //passphrase: fs.readFileSync('../SSL/key.txt').toString(),
 };
 
 const app = new Koa;
@@ -28,7 +34,26 @@ const router = new Router;
 const httpServer = http.createServer(app.callback());
 const server = https.createServer(options, app.callback());
 
+let wsConnection;
+const wss = new Server({
+    server
+});
+
+wss.on('connection', function connection(ws) {
+    ws.on('error', console.error);
+    wsConnection = ws;
+    ws.on('message', function message(data) {
+        console.log('received: %s', data);
+    });
+});
+
 const schema = buildSchema(fs.readFileSync('./schema.graphql').toString());
+
+const corsoptions = {
+    origin: '*'
+};
+
+app.use(cors(options));
 
 app.use(sslify({
     resolver: (ctx) => {
@@ -85,6 +110,16 @@ router.post('/api/:parm', async (ctx) => {
             return;
         } else if (toUser.data) {
             console.log(toUser.data);
+            if ((!(!toUser.data.setRequest)) && (toUser.data.setRequest.State == 'New')) {
+                //io.emit('message', toUser);
+                if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+                    wsConnection.send(toUser.toString());
+                    console.log('WSS: send to client!');
+                } else {
+                    console.log('WebSocket connection is not open.');
+                }
+                console.log(toUser);
+            }
             ctx.body = toUser;
             return;
         } else {
@@ -114,6 +149,10 @@ app.use(Logger())
     .use(router.routes())
     .use(router.allowedMethods());
 
+server.on('error', (err, ctx) => {
+    console.error('Server error', err, ctx);
+});
+
 httpServer.listen(port - 10, () => {
     console.log(`HTTP Server started on port ${port-10}`);
 });
@@ -121,6 +160,4 @@ server.listen(port, () => {
     console.log(`HTTPS Server started on port ${port}!`);
 });
 
-server.on('error', (err, ctx) => {
-    console.error('Server error', err, ctx);
-});
+const io = SocketIO(server);

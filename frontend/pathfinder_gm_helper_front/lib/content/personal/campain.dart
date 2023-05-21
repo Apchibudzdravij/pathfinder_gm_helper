@@ -7,49 +7,57 @@ import 'package:provider/provider.dart';
 import '../../main.dart';
 import '../signin.dart';
 
-class HazardID {
-  HazardID() {
-    this.HID = -1;
+class SessionID {
+  SessionID() {
+    this.GSID = -1;
     this.Name = '';
     this.Description = '';
-    this.Source = '';
   }
-  late int HID;
+  late int GSID;
   late String Name;
   late String Description;
-  late String Source;
 }
 
-class AddHazard extends StatefulWidget {
-  const AddHazard(
-      {super.key, required this.name, required this.desc, required this.src});
+class CampainID {
+  CampainID() {
+    this.GCID = -1;
+    this.Name = '';
+    this.Description = '';
+    this.sessions = [];
+  }
+  late int GCID;
+  late String Name;
+  late String Description;
+  late List<SessionID> sessions;
+}
+
+class AddCampain extends StatefulWidget {
+  const AddCampain({super.key, required this.name, required this.desc});
   final String name;
   final String desc;
-  final String src;
 
   @override
-  State<AddHazard> createState() => _AddHazardState();
+  State<AddCampain> createState() => _AddCampainState();
 }
 
-class _AddHazardState extends State<AddHazard> {
+class _AddCampainState extends State<AddCampain> {
   TextEditingController textFieldController1 = TextEditingController();
   TextEditingController textFieldController2 = TextEditingController();
-  TextEditingController textFieldController3 = TextEditingController();
   var _isButtonAddEnabled = false;
+  String title = 'Создать новую КАМПАНИЮ?';
 
   @override
   void initState() {
     super.initState();
     textFieldController1.text = widget.name;
     textFieldController2.text = widget.desc;
-    textFieldController3.text = widget.src;
+    if (textFieldController1.text != '') title = 'Изменить КАМПАНИЮ?';
   }
 
   void _checkDataLength() {
     setState(() {
       _isButtonAddEnabled = textFieldController1.text.length >= 1 &&
-          textFieldController2.text.length >= 1 &&
-          textFieldController3.text.length >= 1;
+          textFieldController2.text.length >= 1;
     });
   }
 
@@ -57,19 +65,32 @@ class _AddHazardState extends State<AddHazard> {
     var theme = Theme.of(context);
     var appState = context.watch<MyAppPageState>();
 
-    Future<void> createHazard() async {
-      print('he');
-      var resHazard = await sendGraphQLAddHazardRequest(
-          context,
-          textFieldController1.text,
-          textFieldController2.text,
-          textFieldController3.text,
-          appState.uid,
-          appState.name);
-      if (resHazard != -1) {
-        appState.pid = resHazard.HID;
-        print(appState.pid);
-        appState.setStateOfMain('showHazard');
+    Future<void> createCampain() async {
+      if (appState.pid == -1) {
+        var resWeather = await sendGraphQLAddCampainRequest(
+            context,
+            textFieldController1.text,
+            textFieldController2.text,
+            appState.uid,
+            appState.name);
+        if (resWeather.GCID != -1) {
+          appState.pid = resWeather.GCID;
+          print(appState.pid);
+          appState.setStateOfMain('showCampain');
+        }
+      } else {
+        var resWeather = await sendGraphQLUpdCampainRequest(
+            context,
+            appState.pid,
+            textFieldController1.text,
+            textFieldController2.text,
+            appState.uid,
+            appState.name);
+        if (resWeather.GCID != -1) {
+          appState.pid = resWeather.GCID;
+          print(appState.pid);
+          appState.setStateOfMain('showCampain');
+        }
       }
     }
 
@@ -78,9 +99,9 @@ class _AddHazardState extends State<AddHazard> {
       child: Column(
         children: [
           Expanded(
-            flex: 2,
+            flex: 1,
             child: Text(
-              'Создать новую ОПАСНУЮ СРЕДУ?',
+              title,
               style: theme.textTheme.displayMedium!
                   .copyWith(color: theme.primaryColor),
               textAlign: TextAlign.center,
@@ -89,14 +110,14 @@ class _AddHazardState extends State<AddHazard> {
           Expanded(
             flex: 1,
             child: Text(
-              'Легко!',
+              'Вперёд к приключениям!',
               style: theme.textTheme.displaySmall!
                   .copyWith(color: theme.primaryColor),
               textAlign: TextAlign.center,
             ),
           ),
           Expanded(
-            flex: 7,
+            flex: 6,
             child: SizedBox(
               height: MediaQuery.of(context).size.height / 3,
               child: Card(
@@ -111,8 +132,8 @@ class _AddHazardState extends State<AddHazard> {
                           controller: textFieldController1,
                           decoration: const InputDecoration(
                             hintText:
-                                'Например, Холодная полутвёрдая кислота, пахнущая ромашковым чаем с имбирём', // Подсказка в поле ввода
-                            labelText: 'Название опасной среды',
+                                'Например, Добрые сказки няни-орка', // Подсказка в поле ввода
+                            labelText: 'Название кампании',
                             border: OutlineInputBorder(),
                           ),
                           onChanged: (value) {
@@ -133,26 +154,8 @@ class _AddHazardState extends State<AddHazard> {
                           textAlign: TextAlign.justify,
                           decoration: const InputDecoration(
                             hintText:
-                                'Постарайтесь описать среду как можно более подробно ;)', // Подсказка в поле ввода
-                            labelText: 'Описание опасной среды',
-                            border: OutlineInputBorder(),
-                          ),
-                          onChanged: (value) {
-                            _checkDataLength();
-                          },
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width / 1.5,
-                        child: TextField(
-                          controller: textFieldController3,
-                          decoration: const InputDecoration(
-                            hintText:
-                                'Напишите, откуда взяли информацию', // Подсказка в поле ввода
-                            labelText: 'Название ресурса',
+                                'Постарайтесь описать кампанию как можно более подробно ;)', // Подсказка в поле ввода
+                            labelText: 'Описание кампании',
                             border: OutlineInputBorder(),
                           ),
                           onChanged: (value) {
@@ -164,7 +167,7 @@ class _AddHazardState extends State<AddHazard> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 15.0),
                       child: ElevatedButton(
-                        onPressed: _isButtonAddEnabled ? createHazard : null,
+                        onPressed: _isButtonAddEnabled ? createCampain : null,
                         style: ButtonStyle(
                           backgroundColor:
                               MaterialStateProperty.resolveWith<Color>(
@@ -193,9 +196,9 @@ class _AddHazardState extends State<AddHazard> {
             children: [
               ElevatedButton(
                 onPressed: () {
-                  appState.setStateOfMain('environment');
+                  appState.setStateOfMain('myRoom');
                 },
-                child: Text('Назад к поиску',
+                child: Text('Назад к личному кабинету',
                     style: theme.textTheme.bodyLarge!
                         .copyWith(color: theme.colorScheme.primary)),
               ),
@@ -207,17 +210,16 @@ class _AddHazardState extends State<AddHazard> {
   }
 }
 
-class ShowHazard extends StatefulWidget {
-  const ShowHazard({super.key});
+class ShowCampain extends StatefulWidget {
+  const ShowCampain({super.key});
 
   @override
-  State<ShowHazard> createState() => _ShowHazardState();
+  State<ShowCampain> createState() => _ShowCampainState();
 }
 
-class _ShowHazardState extends State<ShowHazard> {
-  HazardID hazard = HazardID();
+class _ShowCampainState extends State<ShowCampain> {
+  CampainID campain = CampainID();
   bool isFirst = true;
-  var _isStar = -1;
 
   @override
   void initState() {
@@ -225,34 +227,73 @@ class _ShowHazardState extends State<ShowHazard> {
     isFirst = true;
   }
 
-  Future<void> updateHazard(BuildContext context, int pid, int uid) async {
-    this.hazard = await sendGraphQLgetHazards(context, pid);
-    await checkIfStar(context, pid, uid);
+  Future<void> firstCampain(BuildContext context, int pid, int uid) async {
+    this.campain = await sendGraphQLgetCampain(context, pid);
     if (isFirst) {
       setState(() {});
       isFirst = false;
     }
   }
 
-  Future<void> checkIfStar(BuildContext context, int pid, int uid) async {
-    _isStar = await sendGraphQLgetUMHazard(context, pid, uid);
-  }
-
-  Future<void> star(BuildContext context, int pid, String name, int uid) async {
-    _isStar = await sendGraphQLstarHazard(context, pid, name, uid);
-    setState(() {});
-  }
-
-  Future<void> unstar(BuildContext context, int pid, int uid) async {
-    await sendGraphQLunstarHazard(context, pid, uid);
-    _isStar = -1;
+  Future<void> deleteSession(BuildContext context, int swid) async {
+    await sendGraphQLDelSessionRequest(context, swid);
     setState(() {});
   }
 
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
     var appState = context.watch<MyAppPageState>();
-    updateHazard(context, appState.pid, appState.uid);
+    firstCampain(context, appState.pid, appState.uid);
+
+    Widget buildInputDecorator(String label, String text, int swid) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: label,
+                  border: OutlineInputBorder(),
+                ),
+                child: SelectableText(
+                  text,
+                  textAlign: TextAlign.justify,
+                ),
+              ),
+            ),
+            if (appState.type != '')
+              Column(
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      appState.swid = swid;
+                      appState.setStateOfMainForEnvUpdate(
+                          'addSession', label, text, '');
+                    },
+                    icon: Icon(Icons.edit),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      deleteSession(context, swid);
+                      bool uno = true;
+                      Future.delayed(Duration(milliseconds: 500), () {
+                        if (uno) {
+                          setState(() {});
+                          uno = false;
+                        }
+                      });
+                    },
+                    icon: Icon(Icons.delete_forever),
+                    iconSize: 20.0,
+                  ),
+                ],
+              ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       padding: EdgeInsets.all(50.0),
@@ -261,31 +302,16 @@ class _ShowHazardState extends State<ShowHazard> {
           Padding(
             padding: const EdgeInsets.all(15.0),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 ElevatedButton(
                   onPressed: () {
-                    appState.setStateOfMain('environment');
+                    appState.setStateOfMain('myRoom');
                   },
-                  child: Text('Назад к поиску',
+                  child: Text('Назад к личному кабинету',
                       style: theme.textTheme.bodyLarge!
                           .copyWith(color: theme.colorScheme.primary)),
                 ),
-                if (appState.uid != -1)
-                  ElevatedButton(
-                    onPressed: () {
-                      //appState.setStateOfMain('environment');
-                      if (_isStar == -1) {
-                        star(context, appState.pid, this.hazard.Name,
-                            appState.uid);
-                      } else {
-                        unstar(context, appState.pid, appState.uid);
-                      }
-                    },
-                    child: _isStar == -1
-                        ? Icon(Icons.star_border)
-                        : Icon(Icons.star),
-                  ),
               ],
             ),
           ),
@@ -312,19 +338,24 @@ class _ShowHazardState extends State<ShowHazard> {
                                     Expanded(
                                       child: InputDecorator(
                                         decoration: InputDecoration(
-                                          labelText: 'Название опасной среды',
+                                          labelText: 'Название кампании',
                                           border:
                                               OutlineInputBorder(), // Граница текстового поля
                                         ),
-                                        child: SelectableText(this.hazard.Name,
+                                        child: SelectableText(this.campain.Name,
                                             style:
                                                 theme.textTheme.headlineSmall!),
                                       ),
                                     ),
-                                    if (appState.type == "m")
+                                    if (appState.type != "")
                                       IconButton(
                                         onPressed: () {
-                                          print('mom');
+                                          //updateWeather();
+                                          appState.setStateOfMainForEnvUpdate(
+                                              'addCampain',
+                                              this.campain.Name,
+                                              this.campain.Description,
+                                              '');
                                         },
                                         icon: const Icon(Icons.edit),
                                         iconSize: 45.0,
@@ -342,35 +373,50 @@ class _ShowHazardState extends State<ShowHazard> {
                                     border:
                                         OutlineInputBorder(), // Граница текстового поля
                                   ),
-                                  child: SelectableText(this.hazard.Description,
-                                      maxLines: 15,
+                                  child: SelectableText(
+                                      this.campain.Description,
+                                      maxLines: this.campain.sessions.isEmpty
+                                          ? 16
+                                          : 8,
                                       style: theme.textTheme.bodyLarge!,
                                       textAlign: TextAlign.justify),
                                 ),
                               ),
+                              if (!this.campain.sessions.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 10.0, right: 10.0),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.grey,
+                                        width: 1.0,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                    height: MediaQuery.of(context).size.height /
+                                        4.5,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10.0),
+                                      child: Expanded(
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            children: this
+                                                .campain
+                                                .sessions
+                                                .map((sub) =>
+                                                    buildInputDecorator(
+                                                        sub.Name,
+                                                        sub.Description,
+                                                        sub.GSID))
+                                                .toList(),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                             ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    flex: 1,
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                          left: 10.0, right: 10.0, bottom: 10.0),
-                      child: SizedBox(
-                        width: MediaQuery.of(context).size.width / 1.5,
-                        child: Padding(
-                          padding:
-                              const EdgeInsets.only(left: 10.0, right: 10.0),
-                          child: InputDecorator(
-                            decoration: InputDecoration(
-                              labelText: 'Ресурс',
-                              border:
-                                  OutlineInputBorder(), // Граница текстового поля
-                            ),
-                            child: SelectableText(this.hazard.Source),
                           ),
                         ),
                       ),
@@ -380,32 +426,41 @@ class _ShowHazardState extends State<ShowHazard> {
               ),
             ),
           ),
+          if (appState.type != '')
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  appState.setStateOfMain('addSession');
+                },
+                child: Text(
+                  'Добавить сессию',
+                  style: theme.textTheme.bodyLarge!
+                      .copyWith(color: theme.colorScheme.primary),
+                ),
+              ),
+            )
         ],
       ),
     );
   }
 }
 
-Future<HazardID> sendGraphQLAddHazardRequest(BuildContext context, String name,
-    String description, String source, int user, String userName) async {
+Future<CampainID> sendGraphQLAddCampainRequest(BuildContext context,
+    String name, String description, int user, String userName) async {
   var url = Uri.parse('https://localhost:7777/api/gql');
+  String escapedDescription = description.replaceAll('\n', '\\n');
   var mutation = '''
     mutation {
-      setHazard(Name: "${Uri.encodeComponent(name)}",
-      Description: "${Uri.encodeComponent(description)}",
-        source: {
-          Name: "$source"
-        },
-        useradd: {
-          Name: "$userName"
+      setCampain(Name: "${Uri.encodeComponent(name)}",
+        Description: "${Uri.encodeComponent(escapedDescription)}",
+        master: {
+          Name: "${Uri.encodeComponent(userName)}"
         }
       ) {
-        HID
+        GCID
         Name
         Description
-        source {
-          Name
-        }
       }
     }
   ''';
@@ -425,10 +480,10 @@ Future<HazardID> sendGraphQLAddHazardRequest(BuildContext context, String name,
       if (data.containsKey('error')) {
         throw Error();
       } else {
-        var name = data['data']['setHazard']['Name'];
-        showAlert(context, 'Среда ${name} успешно добавлена!', 'Успех');
-        HazardID answer = new HazardID();
-        answer.HID = int.parse(data['data']['setHazard']['HID']);
+        var name = data['data']['setCampain']['Name'];
+        showAlert(context, 'Кампания ${name} успешно добавлена!', 'Успех');
+        CampainID answer = new CampainID();
+        answer.GCID = int.parse(data['data']['setCampain']['GCID']);
         return answer;
       }
     } else {
@@ -440,25 +495,27 @@ Future<HazardID> sendGraphQLAddHazardRequest(BuildContext context, String name,
     print('Error: $e');
     showAlert(
         context,
-        'Невозможно добавить опасную среду - среда с таким названием уже существует, или проверьте соединение с интернетом',
+        'Невозможно добавить кампанию - кампания с таким названием уже существует, или проверьте соединение с интернетом',
         'Ошибка');
-    return new HazardID();
+    return new CampainID();
   }
 }
 
-Future<HazardID> sendGraphQLgetHazards(BuildContext context, int hid) async {
+Future<CampainID> sendGraphQLgetCampain(BuildContext context, int hid) async {
   var url = Uri.parse('https://localhost:7777/api/gql');
 
   print(hid);
 
   var query = '''
     query {
-      getHazards(HID: $hid) {
-        HID
+      getGameCampains(GCID: $hid) {
+        GCID
         Name
         Description
-        source {
+        gamesessions {
+          GSID
           Name
+          Description
         }
       }
     }
@@ -483,15 +540,21 @@ Future<HazardID> sendGraphQLgetHazards(BuildContext context, int hid) async {
       if (data.containsKey('error')) {
         throw Error();
       } else {
-        var name = data['data']['getHazards'][0]['Name'];
-        var desc = data['data']['getHazards'][0]['Description'];
-        var hid = int.parse(data['data']['getHazards'][0]['HID']);
-        var src = data['data']['getHazards'][0]['source']['Name'];
-        HazardID haz = new HazardID();
+        var name = data['data']['getGameCampains'][0]['Name'];
+        var desc = data['data']['getGameCampains'][0]['Description'];
+        var gcid = int.parse(data['data']['getGameCampains'][0]['GCID']);
+        CampainID haz = new CampainID();
         haz.Name = name;
         haz.Description = desc;
-        haz.HID = hid;
-        haz.Source = src;
+        haz.GCID = gcid;
+        var subs = data['data']['getGameCampains'][0]['gamesessions'];
+        for (var sub in subs) {
+          SessionID s = SessionID();
+          s.GSID = int.parse(sub['GSID']);
+          s.Name = sub['Name'];
+          s.Description = sub['Description'];
+          haz.sessions.add(s);
+        }
         return haz;
       }
     } else {
@@ -504,81 +567,32 @@ Future<HazardID> sendGraphQLgetHazards(BuildContext context, int hid) async {
         context,
         'Получить данные невозможно - проверьте соединение с интернетом или свяжитесь с модераторами',
         'Ошибка');
-    HazardID haz = new HazardID();
-    return haz;
+    return new CampainID();
   }
 }
 
-Future<int> sendGraphQLgetUMHazard(
-    BuildContext context, int hid, int uid) async {
+Future<CampainID> sendGraphQLUpdCampainRequest(BuildContext context, int gcid,
+    String name, String description, int user, String userName) async {
   var url = Uri.parse('https://localhost:7777/api/gql');
-
-  print(hid);
-
-  var query = '''
-    query {
-      getUserMemory(UID: $uid, TableID: $hid) {
-        UMID
-      }
-    }
-  ''';
-
-  var body = json.encode({
-    'query': query,
-    'context': {'type': 'id'}
-  });
-  print(body);
-
-  try {
-    var response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: body,
-    );
-
-    if (response.statusCode == 200) {
-      var data = json.decode(response.body);
-      print(data);
-      if (data.containsKey('error')) {
-        throw Error();
-      } else {
-        if (data['data']['getUserMemory'].isEmpty) return -1;
-        return int.parse(data['data']['getUserMemory'][0]['UMID']);
-      }
-    } else {
-      print('Request failed with status: ${response.statusCode}');
-      throw Error();
-    }
-  } catch (e) {
-    print('Error: $e');
-    showAlert(
-        context,
-        'Получить данные невозможно - проверьте соединение с интернетом или свяжитесь с модераторами',
-        'Ошибка');
-    return -1;
-  }
-}
-
-Future<int> sendGraphQLstarHazard(
-    BuildContext context, int hid, String name, int uid) async {
-  var url = Uri.parse('https://localhost:7777/api/gql');
-
-  print(hid);
-
+  String escapedDescription = description.replaceAll('\n', '\\n');
   var mutation = '''
     mutation {
-      setUserMemory(UID: $uid,
-        TableID: $hid,
-        TableName: "hazards",
-        Name: "${Uri.encodeComponent(name)}") {
-        UMID
+      setCampain(GCID: $gcid,
+        Name: "${Uri.encodeComponent(name)}",
+        Description: "${Uri.encodeComponent(escapedDescription)}",
+        master: {
+          Name: "${Uri.encodeComponent(userName)}"
+        }
+      ) {
+        GCID
+        Name
+        Description
       }
     }
   ''';
 
   var body = json.encode({'mutation': mutation});
   print(body);
-
   try {
     var response = await http.post(
       url,
@@ -588,45 +602,44 @@ Future<int> sendGraphQLstarHazard(
 
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
-      print(data);
+
       if (data.containsKey('error')) {
         throw Error();
       } else {
-        return int.parse(data['data']['setUserMemory']['UMID']);
+        var name = data['data']['setCampain']['Name'];
+        showAlert(context, 'Кампания ${name} успешно обновлена!', 'Успех');
+        CampainID answer = new CampainID();
+        answer.GCID = int.parse(data['data']['setCampain']['WID']);
+        return answer;
       }
     } else {
       print('Request failed with status: ${response.statusCode}');
       throw Error();
     }
   } catch (e) {
+    // Error occurred
     print('Error: $e');
     showAlert(
         context,
-        'Отметить в закладки невозможно - проверьте соединение с интернетом или свяжитесь с модераторами',
+        'Невозможно обновить кампанию - проверьте соединение с интернетом',
         'Ошибка');
-    return -1;
+    return new CampainID();
   }
 }
 
-Future<int> sendGraphQLunstarHazard(
-    BuildContext context, int hid, int uid) async {
+Future<void> sendGraphQLDelSessionRequest(
+    BuildContext context, int gsid) async {
   var url = Uri.parse('https://localhost:7777/api/gql');
-
-  print(hid);
-
   var mutation = '''
     mutation {
-      delUserMemory(UID: $uid,
-        TableID: $hid,
-        TableName: "hazards") {
-        UMID
+      delGameSessions(GSID: $gsid) {
+        Name
       }
     }
   ''';
 
   var body = json.encode({'mutation': mutation});
   print(body);
-
   try {
     var response = await http.post(
       url,
@@ -636,22 +649,25 @@ Future<int> sendGraphQLunstarHazard(
 
     if (response.statusCode == 200) {
       var data = json.decode(response.body);
-      print(data);
+
       if (data.containsKey('error')) {
         throw Error();
       } else {
-        return int.parse(data['data']['delUserMemory']['UMID']);
+        var name = data['data']['delGameSessions']['Name'];
+        showAlert(context, 'Сессия ${name} успешно удалена!', 'Успех');
+        return;
       }
     } else {
       print('Request failed with status: ${response.statusCode}');
       throw Error();
     }
   } catch (e) {
+    // Error occurred
     print('Error: $e');
     showAlert(
         context,
-        'Убрать из закладок невозможно - проверьте соединение с интернетом или свяжитесь с модераторами',
+        'Невозможно удалить сессию - проверьте соединение с интернетом',
         'Ошибка');
-    return -1;
+    return;
   }
 }

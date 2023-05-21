@@ -7,35 +7,51 @@ import 'package:provider/provider.dart';
 import '../../main.dart';
 import '../signin.dart';
 
-class HazardID {
-  HazardID() {
-    this.HID = -1;
+class WildDetailID {
+  WildDetailID() {
+    this.WDID = -1;
     this.Name = '';
     this.Description = '';
     this.Source = '';
   }
-  late int HID;
+  late int WDID;
   late String Name;
   late String Description;
   late String Source;
 }
 
-class AddHazard extends StatefulWidget {
-  const AddHazard(
+class WildernessID {
+  WildernessID() {
+    this.WID = -1;
+    this.Name = '';
+    this.Description = '';
+    this.Source = '';
+    this.wildDetail = [];
+  }
+  late int WID;
+  late String Name;
+  late String Description;
+  late String Source;
+  late List<WildDetailID> wildDetail;
+}
+
+class AddWilderness extends StatefulWidget {
+  const AddWilderness(
       {super.key, required this.name, required this.desc, required this.src});
   final String name;
   final String desc;
   final String src;
 
   @override
-  State<AddHazard> createState() => _AddHazardState();
+  State<AddWilderness> createState() => _AddWildernessState();
 }
 
-class _AddHazardState extends State<AddHazard> {
+class _AddWildernessState extends State<AddWilderness> {
   TextEditingController textFieldController1 = TextEditingController();
   TextEditingController textFieldController2 = TextEditingController();
   TextEditingController textFieldController3 = TextEditingController();
   var _isButtonAddEnabled = false;
+  String title = 'Создать новую ДИКУЮ МЕСТНОСТЬ?';
 
   @override
   void initState() {
@@ -43,6 +59,7 @@ class _AddHazardState extends State<AddHazard> {
     textFieldController1.text = widget.name;
     textFieldController2.text = widget.desc;
     textFieldController3.text = widget.src;
+    if (textFieldController1.text != '') title = 'Изменить ДИКУЮ МЕСТНОСТЬ?';
   }
 
   void _checkDataLength() {
@@ -57,19 +74,35 @@ class _AddHazardState extends State<AddHazard> {
     var theme = Theme.of(context);
     var appState = context.watch<MyAppPageState>();
 
-    Future<void> createHazard() async {
+    Future<void> createWilderness() async {
       print('he');
-      var resHazard = await sendGraphQLAddHazardRequest(
-          context,
-          textFieldController1.text,
-          textFieldController2.text,
-          textFieldController3.text,
-          appState.uid,
-          appState.name);
-      if (resHazard != -1) {
-        appState.pid = resHazard.HID;
-        print(appState.pid);
-        appState.setStateOfMain('showHazard');
+      if (appState.pid == -1) {
+        var resWilderness = await sendGraphQLAddWildernessRequest(
+            context,
+            textFieldController1.text,
+            textFieldController2.text,
+            textFieldController3.text,
+            appState.uid,
+            appState.name);
+        if (resWilderness.WID != -1) {
+          appState.pid = resWilderness.WID;
+          print(appState.pid);
+          appState.setStateOfMain('showWilderness');
+        }
+      } else {
+        var resWilderness = await sendGraphQLUpdWildernessRequest(
+            context,
+            appState.pid,
+            textFieldController1.text,
+            textFieldController2.text,
+            textFieldController3.text,
+            appState.uid,
+            appState.name);
+        if (resWilderness.WID != -1) {
+          appState.pid = resWilderness.WID;
+          print(appState.pid);
+          appState.setStateOfMain('showWilderness');
+        }
       }
     }
 
@@ -78,9 +111,9 @@ class _AddHazardState extends State<AddHazard> {
       child: Column(
         children: [
           Expanded(
-            flex: 2,
+            flex: 1,
             child: Text(
-              'Создать новую ОПАСНУЮ СРЕДУ?',
+              title,
               style: theme.textTheme.displayMedium!
                   .copyWith(color: theme.primaryColor),
               textAlign: TextAlign.center,
@@ -89,14 +122,14 @@ class _AddHazardState extends State<AddHazard> {
           Expanded(
             flex: 1,
             child: Text(
-              'Легко!',
+              'Без труда!',
               style: theme.textTheme.displaySmall!
                   .copyWith(color: theme.primaryColor),
               textAlign: TextAlign.center,
             ),
           ),
           Expanded(
-            flex: 7,
+            flex: 6,
             child: SizedBox(
               height: MediaQuery.of(context).size.height / 3,
               child: Card(
@@ -111,8 +144,8 @@ class _AddHazardState extends State<AddHazard> {
                           controller: textFieldController1,
                           decoration: const InputDecoration(
                             hintText:
-                                'Например, Холодная полутвёрдая кислота, пахнущая ромашковым чаем с имбирём', // Подсказка в поле ввода
-                            labelText: 'Название опасной среды',
+                                'Например, Область радужных единорогов', // Подсказка в поле ввода
+                            labelText: 'Название дикой местности',
                             border: OutlineInputBorder(),
                           ),
                           onChanged: (value) {
@@ -133,8 +166,8 @@ class _AddHazardState extends State<AddHazard> {
                           textAlign: TextAlign.justify,
                           decoration: const InputDecoration(
                             hintText:
-                                'Постарайтесь описать среду как можно более подробно ;)', // Подсказка в поле ввода
-                            labelText: 'Описание опасной среды',
+                                'Постарайтесь описать дикую местность как можно более подробно ;)', // Подсказка в поле ввода
+                            labelText: 'Описание дикой местности',
                             border: OutlineInputBorder(),
                           ),
                           onChanged: (value) {
@@ -164,7 +197,8 @@ class _AddHazardState extends State<AddHazard> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 15.0),
                       child: ElevatedButton(
-                        onPressed: _isButtonAddEnabled ? createHazard : null,
+                        onPressed:
+                            _isButtonAddEnabled ? createWilderness : null,
                         style: ButtonStyle(
                           backgroundColor:
                               MaterialStateProperty.resolveWith<Color>(
@@ -207,15 +241,15 @@ class _AddHazardState extends State<AddHazard> {
   }
 }
 
-class ShowHazard extends StatefulWidget {
-  const ShowHazard({super.key});
+class ShowWilderness extends StatefulWidget {
+  const ShowWilderness({super.key});
 
   @override
-  State<ShowHazard> createState() => _ShowHazardState();
+  State<ShowWilderness> createState() => _ShowWildernessState();
 }
 
-class _ShowHazardState extends State<ShowHazard> {
-  HazardID hazard = HazardID();
+class _ShowWildernessState extends State<ShowWilderness> {
+  WildernessID wilderness = WildernessID();
   bool isFirst = true;
   var _isStar = -1;
 
@@ -225,8 +259,8 @@ class _ShowHazardState extends State<ShowHazard> {
     isFirst = true;
   }
 
-  Future<void> updateHazard(BuildContext context, int pid, int uid) async {
-    this.hazard = await sendGraphQLgetHazards(context, pid);
+  Future<void> firstWilderness(BuildContext context, int pid, int uid) async {
+    this.wilderness = await sendGraphQLgetWilderness(context, pid);
     await checkIfStar(context, pid, uid);
     if (isFirst) {
       setState(() {});
@@ -235,24 +269,80 @@ class _ShowHazardState extends State<ShowHazard> {
   }
 
   Future<void> checkIfStar(BuildContext context, int pid, int uid) async {
-    _isStar = await sendGraphQLgetUMHazard(context, pid, uid);
+    _isStar = await sendGraphQLgetUMWilderness(context, pid, uid);
   }
 
   Future<void> star(BuildContext context, int pid, String name, int uid) async {
-    _isStar = await sendGraphQLstarHazard(context, pid, name, uid);
+    _isStar = await sendGraphQLstarWilderness(context, pid, name, uid);
     setState(() {});
   }
 
   Future<void> unstar(BuildContext context, int pid, int uid) async {
-    await sendGraphQLunstarHazard(context, pid, uid);
+    await sendGraphQLunstarWilderness(context, pid, uid);
     _isStar = -1;
+    setState(() {});
+  }
+
+  void deleteWildDetail(BuildContext context, int swid) async {
+    await sendGraphQLDelWildDetailRequest(context, swid);
     setState(() {});
   }
 
   Widget build(BuildContext context) {
     var theme = Theme.of(context);
     var appState = context.watch<MyAppPageState>();
-    updateHazard(context, appState.pid, appState.uid);
+    firstWilderness(context, appState.pid, appState.uid);
+
+    Widget buildInputDecorator(String label, String text, int swid) {
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 10.0),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: InputDecorator(
+                decoration: InputDecoration(
+                  labelText: label,
+                  border: OutlineInputBorder(),
+                ),
+                child: SelectableText(
+                  text,
+                  textAlign: TextAlign.justify,
+                ),
+              ),
+            ),
+            if (appState.type == 'm')
+              Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    onPressed: () {
+                      appState.swid = swid;
+                      appState.setStateOfMainForEnvUpdate(
+                          'addWildDetail', label, text, this.wilderness.Source);
+                    },
+                    icon: Icon(Icons.edit),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      deleteWildDetail(context, swid);
+                      bool uno = true;
+                      Future.delayed(Duration(milliseconds: 500), () {
+                        if (uno) {
+                          setState(() {});
+                          uno = false;
+                        }
+                      });
+                    },
+                    icon: Icon(Icons.delete_forever),
+                    iconSize: 20.0,
+                  ),
+                ],
+              ),
+          ],
+        ),
+      );
+    }
 
     return Container(
       padding: EdgeInsets.all(50.0),
@@ -276,7 +366,7 @@ class _ShowHazardState extends State<ShowHazard> {
                     onPressed: () {
                       //appState.setStateOfMain('environment');
                       if (_isStar == -1) {
-                        star(context, appState.pid, this.hazard.Name,
+                        star(context, appState.pid, this.wilderness.Name,
                             appState.uid);
                       } else {
                         unstar(context, appState.pid, appState.uid);
@@ -312,11 +402,12 @@ class _ShowHazardState extends State<ShowHazard> {
                                     Expanded(
                                       child: InputDecorator(
                                         decoration: InputDecoration(
-                                          labelText: 'Название опасной среды',
+                                          labelText: 'Название дикой местности',
                                           border:
                                               OutlineInputBorder(), // Граница текстового поля
                                         ),
-                                        child: SelectableText(this.hazard.Name,
+                                        child: SelectableText(
+                                            this.wilderness.Name,
                                             style:
                                                 theme.textTheme.headlineSmall!),
                                       ),
@@ -324,7 +415,11 @@ class _ShowHazardState extends State<ShowHazard> {
                                     if (appState.type == "m")
                                       IconButton(
                                         onPressed: () {
-                                          print('mom');
+                                          appState.setStateOfMainForEnvUpdate(
+                                              'addWilderness',
+                                              this.wilderness.Name,
+                                              this.wilderness.Description,
+                                              this.wilderness.Source);
                                         },
                                         icon: const Icon(Icons.edit),
                                         iconSize: 45.0,
@@ -342,12 +437,50 @@ class _ShowHazardState extends State<ShowHazard> {
                                     border:
                                         OutlineInputBorder(), // Граница текстового поля
                                   ),
-                                  child: SelectableText(this.hazard.Description,
-                                      maxLines: 15,
+                                  child: SelectableText(
+                                      this.wilderness.Description,
+                                      maxLines:
+                                          this.wilderness.wildDetail.isEmpty
+                                              ? 15
+                                              : 7,
                                       style: theme.textTheme.bodyLarge!,
                                       textAlign: TextAlign.justify),
                                 ),
                               ),
+                              if (!this.wilderness.wildDetail.isEmpty)
+                                Padding(
+                                  padding: const EdgeInsets.only(
+                                      left: 10.0, right: 10.0),
+                                  child: Container(
+                                    decoration: BoxDecoration(
+                                      border: Border.all(
+                                        color: Colors.grey,
+                                        width: 1.0,
+                                      ),
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                    height: MediaQuery.of(context).size.height /
+                                        4.5,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(10.0),
+                                      child: Expanded(
+                                        child: SingleChildScrollView(
+                                          child: Column(
+                                            children: this
+                                                .wilderness
+                                                .wildDetail
+                                                .map((sub) =>
+                                                    buildInputDecorator(
+                                                        sub.Name,
+                                                        sub.Description,
+                                                        sub.WDID))
+                                                .toList(),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
                             ],
                           ),
                         ),
@@ -370,7 +503,7 @@ class _ShowHazardState extends State<ShowHazard> {
                               border:
                                   OutlineInputBorder(), // Граница текстового поля
                             ),
-                            child: SelectableText(this.hazard.Source),
+                            child: SelectableText(this.wilderness.Source),
                           ),
                         ),
                       ),
@@ -380,27 +513,41 @@ class _ShowHazardState extends State<ShowHazard> {
               ),
             ),
           ),
+          if (appState.type == 'm')
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: ElevatedButton(
+                onPressed: () {
+                  appState.setStateOfMain('addWildDetail');
+                },
+                child: Text('Добавить деталь об этой дикой местности'),
+              ),
+            )
         ],
       ),
     );
   }
 }
 
-Future<HazardID> sendGraphQLAddHazardRequest(BuildContext context, String name,
-    String description, String source, int user, String userName) async {
+Future<WildernessID> sendGraphQLAddWildernessRequest(
+    BuildContext context,
+    String name,
+    String description,
+    String source,
+    int user,
+    String userName) async {
   var url = Uri.parse('https://localhost:7777/api/gql');
   var mutation = '''
     mutation {
-      setHazard(Name: "${Uri.encodeComponent(name)}",
-      Description: "${Uri.encodeComponent(description)}",
+      setWilderness(Name: "${Uri.encodeComponent(name)}", Description: "${Uri.encodeComponent(description)}",
         source: {
-          Name: "$source"
+          Name: "${Uri.encodeComponent(source)}"
         },
         useradd: {
-          Name: "$userName"
+          Name: "${Uri.encodeComponent(userName)}"
         }
       ) {
-        HID
+        WID
         Name
         Description
         source {
@@ -425,10 +572,11 @@ Future<HazardID> sendGraphQLAddHazardRequest(BuildContext context, String name,
       if (data.containsKey('error')) {
         throw Error();
       } else {
-        var name = data['data']['setHazard']['Name'];
-        showAlert(context, 'Среда ${name} успешно добавлена!', 'Успех');
-        HazardID answer = new HazardID();
-        answer.HID = int.parse(data['data']['setHazard']['HID']);
+        var name = data['data']['setWilderness']['Name'];
+        showAlert(
+            context, 'Дикая местность ${name} успешно добавлена!', 'Успех');
+        WildernessID answer = new WildernessID();
+        answer.WID = int.parse(data['data']['setWilderness']['WID']);
         return answer;
       }
     } else {
@@ -440,25 +588,31 @@ Future<HazardID> sendGraphQLAddHazardRequest(BuildContext context, String name,
     print('Error: $e');
     showAlert(
         context,
-        'Невозможно добавить опасную среду - среда с таким названием уже существует, или проверьте соединение с интернетом',
+        'Невозможно добавить дикую местность - местность с таким названием уже существует, или проверьте соединение с интернетом, или сервер временно недоступен',
         'Ошибка');
-    return new HazardID();
+    return new WildernessID();
   }
 }
 
-Future<HazardID> sendGraphQLgetHazards(BuildContext context, int hid) async {
+Future<WildernessID> sendGraphQLgetWilderness(
+    BuildContext context, int hid) async {
   var url = Uri.parse('https://localhost:7777/api/gql');
 
   print(hid);
 
   var query = '''
     query {
-      getHazards(HID: $hid) {
-        HID
+      getWilderness(WID: $hid) {
+        WID
         Name
         Description
         source {
           Name
+        }
+        wilddetail {
+          WDID
+          Name
+          Description
         }
       }
     }
@@ -483,15 +637,23 @@ Future<HazardID> sendGraphQLgetHazards(BuildContext context, int hid) async {
       if (data.containsKey('error')) {
         throw Error();
       } else {
-        var name = data['data']['getHazards'][0]['Name'];
-        var desc = data['data']['getHazards'][0]['Description'];
-        var hid = int.parse(data['data']['getHazards'][0]['HID']);
-        var src = data['data']['getHazards'][0]['source']['Name'];
-        HazardID haz = new HazardID();
+        var name = data['data']['getWilderness'][0]['Name'];
+        var desc = data['data']['getWilderness'][0]['Description'];
+        var hid = int.parse(data['data']['getWilderness'][0]['WID']);
+        var src = data['data']['getWilderness'][0]['source']['Name'];
+        WildernessID haz = new WildernessID();
         haz.Name = name;
         haz.Description = desc;
-        haz.HID = hid;
+        haz.WID = hid;
         haz.Source = src;
+        var subs = data['data']['getWilderness'][0]['wilddetail'];
+        for (var sub in subs) {
+          WildDetailID s = WildDetailID();
+          s.WDID = int.parse(sub['WDID']);
+          s.Name = sub['Name'];
+          s.Description = sub['Description'];
+          haz.wildDetail.add(s);
+        }
         return haz;
       }
     } else {
@@ -504,12 +666,126 @@ Future<HazardID> sendGraphQLgetHazards(BuildContext context, int hid) async {
         context,
         'Получить данные невозможно - проверьте соединение с интернетом или свяжитесь с модераторами',
         'Ошибка');
-    HazardID haz = new HazardID();
+    WildernessID haz = new WildernessID();
     return haz;
   }
 }
 
-Future<int> sendGraphQLgetUMHazard(
+Future<WildernessID> sendGraphQLUpdWildernessRequest(
+    BuildContext context,
+    int wid,
+    String name,
+    String description,
+    String source,
+    int user,
+    String userName) async {
+  var url = Uri.parse('https://localhost:7777/api/gql');
+  var mutation = '''
+    mutation {
+      setWilderness(WID: $wid,
+        Name: "${Uri.encodeComponent(name)}",
+        Description: "${Uri.encodeComponent(description)}",
+        source: {
+          Name: "${Uri.encodeComponent(source)}"
+        },
+        useradd: {
+          Name: "${Uri.encodeComponent(userName)}"
+        }
+      ) {
+        WID
+        Name
+        Description
+        source {
+          Name
+        }
+      }
+    }
+  ''';
+
+  var body = json.encode({'mutation': mutation});
+  print(body);
+  try {
+    var response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+
+      if (data.containsKey('error')) {
+        throw Error();
+      } else {
+        var name = data['data']['setWilderness']['Name'];
+        showAlert(
+            context, 'Дикая местность ${name} успешно обновлена!', 'Успех');
+        WildernessID answer = new WildernessID();
+        answer.WID = int.parse(data['data']['setWilderness']['WID']);
+        return answer;
+      }
+    } else {
+      print('Request failed with status: ${response.statusCode}');
+      throw Error();
+    }
+  } catch (e) {
+    // Error occurred
+    print('Error: $e');
+    showAlert(
+        context,
+        'Невозможно обновить дикую местность - проверьте соединение с интернетом',
+        'Ошибка');
+    return new WildernessID();
+  }
+}
+
+Future<void> sendGraphQLDelWildDetailRequest(
+    BuildContext context, int swid) async {
+  var url = Uri.parse('https://localhost:7777/api/gql');
+  var mutation = '''
+    mutation {
+      delWildDetails(WDID: $swid) {
+        Name
+      }
+    }
+  ''';
+
+  var body = json.encode({'mutation': mutation});
+  print(body);
+  try {
+    var response = await http.post(
+      url,
+      headers: {'Content-Type': 'application/json'},
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      var data = json.decode(response.body);
+
+      if (data.containsKey('error')) {
+        throw Error();
+      } else {
+        var name = data['data']['delWildDetails']['Name'];
+        showAlert(context, 'Деталь о дикой местности ${name} успешно удалена!',
+            'Успех');
+        return;
+      }
+    } else {
+      print('Request failed with status: ${response.statusCode}');
+      throw Error();
+    }
+  } catch (e) {
+    // Error occurred
+    print('Error: $e');
+    showAlert(
+        context,
+        'Невозможно удалить деталь о дикой местности - проверьте соединение с интернетом',
+        'Ошибка');
+    return;
+  }
+}
+
+Future<int> sendGraphQLgetUMWilderness(
     BuildContext context, int hid, int uid) async {
   var url = Uri.parse('https://localhost:7777/api/gql');
 
@@ -559,7 +835,7 @@ Future<int> sendGraphQLgetUMHazard(
   }
 }
 
-Future<int> sendGraphQLstarHazard(
+Future<int> sendGraphQLstarWilderness(
     BuildContext context, int hid, String name, int uid) async {
   var url = Uri.parse('https://localhost:7777/api/gql');
 
@@ -569,7 +845,7 @@ Future<int> sendGraphQLstarHazard(
     mutation {
       setUserMemory(UID: $uid,
         TableID: $hid,
-        TableName: "hazards",
+        TableName: "wilderness",
         Name: "${Uri.encodeComponent(name)}") {
         UMID
       }
@@ -608,7 +884,7 @@ Future<int> sendGraphQLstarHazard(
   }
 }
 
-Future<int> sendGraphQLunstarHazard(
+Future<int> sendGraphQLunstarWilderness(
     BuildContext context, int hid, int uid) async {
   var url = Uri.parse('https://localhost:7777/api/gql');
 
@@ -618,7 +894,7 @@ Future<int> sendGraphQLunstarHazard(
     mutation {
       delUserMemory(UID: $uid,
         TableID: $hid,
-        TableName: "hazards") {
+        TableName: "wilderness") {
         UMID
       }
     }

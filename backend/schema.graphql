@@ -1,12 +1,13 @@
 schema {
   query: Query
   mutation: Mutation
+  subscription: Subscription
 }
 
 type Source {
   SID: ID!
   Name: String!
-  Description: String!
+  Description: String
   gods: [Gods]
   subweather: [Subweather]
   weather: [Weather]
@@ -30,7 +31,7 @@ type Source {
 
 input SourceInput {
   Name: String!
-  Description: String!
+  Description: String
 }
 
 type Images {
@@ -730,12 +731,13 @@ type Wilderness {
 }
 
 input WildernessInput {
-  Name: String!
-  Description: String!
+  WID: Int
+  Name: String
+  Description: String
   wilddetail: [WildDetailsInput]
-  Useradd: Int!
+  Useradd: Int
   userupd: [UsersInput]
-  Source: Int!
+  Source: Int
 }
 
 type WildDetails {
@@ -819,12 +821,13 @@ type Weather {
 }
 
 input WeatherInput {
-  Name: String!
-  Description: String!
+  WID: Int
+  Name: String
+  Description: String
   subweather: [SubweatherInput]
-  Useradd: Int!
+  Useradd: Int
   userupd: [UsersInput]
-  Source: Int!
+  Source: Int
 }
 
 type Subweather {
@@ -913,12 +916,14 @@ type Users {
   ufeats: [Feats]
   monsters: [Monsters]
   umonsters: [Monsters]
+  requests: [Requests]
 }
 
 input UsersInput {
-  Name: String!
-  Password: String!
-  Type: String!
+  UID: Int
+  Name: String
+  Password: String
+  Type: String
 }
 
 type GameCampains {
@@ -931,10 +936,11 @@ type GameCampains {
 }
 
 input GameCampainsInput {
-  Name:         String!
-  Description:  String!
+  GCID:         Int!
+  Name:         String
+  Description:  String
   ScenarioFile: String
-  Master:       Int!
+  Master:       Int
   gamesessions: [GameSessionsInput]
 }
 
@@ -1081,7 +1087,25 @@ input ClassesOnCharactersInput {
   Level:       Int!
 }
 
+type UserMemory {
+  UMID:      ID!
+  UID:       Int!
+  TableID:   Int!
+  TableName: String!
+  Name:      String!
+}
+
+type Requests {
+  RID:      ID!
+  Sender:   Int
+  Message:  String!
+  State:    String!
+  resolver: Users
+}
+
 type Query {
+  getUserMemory(UID: Int!, TableID: Int, TableName: String): [UserMemory]
+  getRequests(State: String): [Requests]
   getSource(Name: String, SID: Int): [Source]
   getImages(IID: Int): [Images]
   getBasicAbilities(Name: String, BAID: Int): [BasicAbilities]
@@ -1119,7 +1143,7 @@ type Query {
   getSubweather(SWID: Int, Name: String): [Subweather]
   getGods(GID: Int, Name: String): [Gods]
   getUsers(Name: String!, Password: String!): [Users]
-  getGameCampains(GCID: Int, Name: String): [GameCampains]
+  getGameCampains(GCID: Int, Name: String, Master: Int): [GameCampains]
   getGameSessions(GSID: Int, Name: String): [GameSessions]
   getPlayers(PID: Int, Name: String): [Players]
   getCharacters(CID: Int, Name: String): [Characters]
@@ -1156,7 +1180,7 @@ type Mutation {
   setTrapReset(TRID: Int, Name: String!, Description: String!): TrapResets
   setTrapTrigger(TTID: Int, Name: String!, Description: String!): TrapTriggers
   setTrap(TID: Int, Name: String!, Description: String!, type: TrapTypesInput, Perception: String!, DisableDice: String!, trigger: TrapTriggersInput, reset: TrapResetsInput, Effect: String, CR: String!, useradd: UsersInput!, source: SourceInput!): Traps
-  setWeather(WID: Int, Name: String!, Description: String!, useradd: UsersInput!, source: SourceInput!): Weather
+  setWeather(WID: Int, Name: String!, Description: String!, useradd: UsersInput!, source: SourceInput!, subweather: [SubweatherInput]): Weather
   setSubweather(SWID: Int, class: WeatherInput!, Name: String!, Description: String!, useradd: UsersInput!, source: SourceInput!): Subweather
   setGod(GID: Int, Name: String!, Description: String!, useradd: UsersInput!, source: SourceInput!, Weapon: String!): Gods
   setUser(UID: Int, Name: String!, Password: String, Type: String!): Users
@@ -1164,6 +1188,8 @@ type Mutation {
   setSession(GSID: Int, Name: String!, Description: String!, campain: GameCampainsInput, SessionFile: String, npcs: [CharactersInput], pcs: [CharactersInput]): GameSessions
   setPlayer(PID: Int, Name: String!, master: UsersInput!, characters: [CharactersInput], Notes: String): Players
   setCharacter(CID: Int, Name: String!, parameters: CharacterParametersInput, defence: DefencePropsInput, alignment: AlignmentsInput, player: PlayersInput, multiclass: [ClassesOnCharactersInput], god: GodsInput!, Motherland: String!, race: RacesInput!, Size: Int!, Gender: String!, Age: Int!, Height: String!, Weight: Float!, HairColor: String!, EyeColor: String!, Language: String!, CircumstanceModifiers: String, SpecialCapabilities: String, EXP: Int!, spells: [SpellsInput], cash: CharacterCashesInput!, speed: CharacterSpeedInput!): Characters
+  setUserMemory(UID: Int!, TableID: Int!, TableName: String!, Name: String!): UserMemory
+  setRequest(RID: Int, Sender: Int, Message: String, State: String!, resolver: UsersInput): Requests
   
   delSource(SID: Int!): Source
   delImages(IID: Int!): Images
@@ -1206,4 +1232,10 @@ type Mutation {
   delGameSessions(GSID: Int): GameSessions
   delPlayers(PID: Int): Players
   delCharacters(CID: Int): Characters
+  delUserMemory(UID: Int, TableID: Int, TableName: String): UserMemory
+  delRequest(RID: Int!): Requests
+}
+
+type Subscription {
+  requests: Requests
 }
