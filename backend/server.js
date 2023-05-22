@@ -113,7 +113,7 @@ router.post('/api/:parm', async (ctx) => {
             if ((!(!toUser.data.setRequest)) && (toUser.data.setRequest.State == 'New')) {
                 //io.emit('message', toUser);
                 if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
-                    wsConnection.send(toUser.toString());
+                    wsConnection.send(JSON.stringify(toUser.data));
                     console.log('WSS: send to client!');
                 } else {
                     console.log('WebSocket connection is not open.');

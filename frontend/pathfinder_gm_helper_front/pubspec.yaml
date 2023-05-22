@@ -40,6 +40,7 @@ dependencies:
   graphql_flutter: ^5.1.2
   fluttertoast: ^8.2.1
   socket_io_client: ^2.0.2
+  oktoast: ^3.3.1
 
 dev_dependencies:
   flutter_test:

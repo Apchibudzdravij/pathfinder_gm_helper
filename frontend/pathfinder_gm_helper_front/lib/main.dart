@@ -6,7 +6,8 @@ import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
-import 'package:web_socket_channel/io.dart';
+import 'package:web_socket_channel/html.dart';
+import 'package:oktoast/oktoast.dart';
 import 'package:pathfinder_gm_helper_front/content/environment/environment.dart';
 import 'package:pathfinder_gm_helper_front/content/environment/hazard.dart';
 import 'package:pathfinder_gm_helper_front/content/environment/weather.dart';
@@ -33,12 +34,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => MyAppPageState(),
-      child: MaterialApp(
-        title: 'Pathfinder GM Helper',
-        theme: ThemeData(
-            useMaterial3: true,
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)),
-        home: MyHomePage(title: 'Помощник Мастера Игры Pathfinder'),
+      child: OKToast(
+        child: MaterialApp(
+          title: 'Pathfinder GM Helper',
+          theme: ThemeData(
+              useMaterial3: true,
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple)),
+          home: MyHomePage(title: 'Помощник Мастера Игры Pathfinder'),
+        ),
       ),
     );
   }
@@ -108,13 +111,38 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    connectToWebSocket();
+    channel = HtmlWebSocketChannel.connect('wss://localhost:7777/');
   }
 
-  void connectToWebSocket() {
-    channel = IOWebSocketChannel.connect('wss://localhost:7777/');
+  void connectToWebSocket(BuildContext context, int uid) {
+    channel.sink.close();
+    channel = HtmlWebSocketChannel.connect('wss://localhost:7777/');
     channel.stream.listen((message) {
       print('Received message: $message');
+      var jsonmessage = json.decode(message.toString());
+      //_showToast(context, jsonmessage['setRequest']['Message'],
+      //    int.parse(jsonmessage['setRequest']['RID']), uid);
+      showToastWidget(
+          Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: SizedBox(
+              width: 300,
+              height: 100,
+              child: Card(
+                color: Color.fromRGBO(239, 214, 255, 1),
+                child: SingleChildScrollView(
+                  child: Text(
+                    jsonmessage['setRequest']['Message'],
+                    style: TextStyle(fontSize: 200.0),
+                    textAlign: TextAlign.justify,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          position: ToastPosition(align: Alignment.bottomLeft, offset: 10.0),
+          duration: Duration(seconds: 10));
+      setState(() {});
     });
   }
 
@@ -122,6 +150,12 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppPageState>();
     var stateOfMain = appState.stateOfMain;
+
+    if (appState.uid == -1) {
+      channel.sink.close();
+    } else if (appState.type == 'm') {
+      connectToWebSocket(context, appState.uid);
+    }
 
     Widget page;
     switch (stateOfMain) {
@@ -463,57 +497,116 @@ class TableMainPage extends StatelessWidget {
   }
 }
 
-void _showToast(BuildContext context, String message) {
-  final scaffold = ScaffoldMessenger.of(context);
-  scaffold.showSnackBar(
-    SnackBar(
-      backgroundColor: Colors.transparent, // Прозрачный фон SnackBar
-      elevation: 0, // Нет тени
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          SizedBox(
-            width: MediaQuery.of(context).size.width / 3,
-            child: Card(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(5.0), // Закругленные края
+Widget _showToast(BuildContext scontext, String smessage, int srid, int suid) {
+  Future<void> sendGraphQLApplyRequestRequest(
+      BuildContext context, int rid, int user) async {
+    var url = Uri.parse('https://localhost:7777/api/gql');
+    var mutation = '''
+    mutation {
+      setRequest(
+        State: "Applying",
+        resolver: { UID: $user },
+        RID: $rid
+      ) {
+        RID
+        Message
+        Sender
+        State
+        resolver {
+          UID
+          Name
+        }
+      }
+    }
+  ''';
+
+    var body = json.encode({'mutation': mutation});
+    print(body);
+    try {
+      var response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: body,
+      );
+
+      if (response.statusCode == 200) {
+        var data = json.decode(response.body);
+
+        if (data.containsKey('error')) {
+          throw Error();
+        } else {
+          var id = int.parse(data['data']['setRequest']['RID']);
+          var message = data['data']['setRequest']['Message'];
+          var state = data['data']['setRequest']['State'];
+          var sender = data['data']['setRequest']['Sender'];
+          var ruid = int.parse(data['data']['setRequest']['resolver']['UID']);
+          var rname = data['data']['setRequest']['resolver']['Name'];
+          showAlert(context, 'Запрос "${message}" успешно принят к выполнению!',
+              'Успех');
+          return;
+        }
+      } else {
+        print('Request failed with status: ${response.statusCode}');
+        throw Error();
+      }
+    } catch (e) {
+      // Error occurred
+      print('Error: $e');
+      showAlert(
+          context,
+          'Невозможно принять запрос - проверьте соединение с интернетом',
+          'Ошибка');
+      return;
+    }
+  }
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      SizedBox(
+        width: MediaQuery.of(scontext).size.width / 3,
+        child: Card(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(5.0), // Закругленные края
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Text(
+                  smessage,
+                  textAlign: TextAlign.justify,
+                  style: TextStyle(color: Color(255)),
+                ),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: Text(
-                      message,
-                      textAlign: TextAlign.justify,
-                    ),
+                  ElevatedButton(
+                    onPressed: () async {
+                      await sendGraphQLApplyRequestRequest(
+                          scontext, srid, suid);
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Color.fromRGBO(240, 255, 240, 1)),
+                    child: Text('Принять'),
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Color.fromRGBO(240, 255, 240, 1)),
-                        child: Text('Принять'),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          scaffold.hideCurrentSnackBar();
-                        },
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Color.fromRGBO(255, 240, 240, 1)),
-                        child: Text('Пропустить'),
-                      ),
-                    ],
+                  ElevatedButton(
+                    onPressed: () {
+                      //scaffold.hideCurrentSnackBar();
+                    },
+                    style: ElevatedButton.styleFrom(
+                        backgroundColor: Color.fromRGBO(255, 240, 240, 1)),
+                    child: Text('Пропустить'),
                   ),
                 ],
               ),
-            ),
+            ],
           ),
-        ],
+        ),
       ),
-    ),
+    ],
   );
 }
 
