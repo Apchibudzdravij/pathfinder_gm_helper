@@ -291,20 +291,18 @@ class _PersonalAreaState extends State<PersonalArea> {
                 var name = campain['Name'];
                 var campainWidget = Padding(
                   padding: const EdgeInsets.all(10.0),
-                  child: Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        appState.pid = int.parse(tid);
-                        appState.setStateOfMain('showCampain');
-                      },
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Icon(Icons.map),
-                          Text(name, overflow: TextOverflow.clip),
-                          Icon(Icons.map),
-                        ],
-                      ),
+                  child: ElevatedButton(
+                    onPressed: () {
+                      appState.pid = int.parse(tid);
+                      appState.setStateOfMain('showCampain');
+                    },
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Icon(Icons.map),
+                        Text(name, overflow: TextOverflow.clip),
+                        Icon(Icons.map),
+                      ],
                     ),
                   ),
                 );
@@ -392,26 +390,26 @@ class _PersonalAreaState extends State<PersonalArea> {
                   flex: 1,
                   child: Column(
                     children: [
-                      Expanded(
-                        flex: 1,
+                      Container(
+                        height: MediaQuery.of(context).size.height / 12,
                         child: Text(
                           'Кампании',
                           style: theme.textTheme.displaySmall!
                               .copyWith(color: theme.colorScheme.primary),
                         ),
                       ),
-                      Expanded(
-                        flex: 10,
-                        child: SingleChildScrollView(
-                          padding: EdgeInsets.all(5.0),
+                      SingleChildScrollView(
+                        padding: EdgeInsets.all(5.0),
+                        child: Container(
+                          height: MediaQuery.of(context).size.height * 8 / 12,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.start,
                             children: campains, //campains
                           ),
                         ),
                       ),
-                      Expanded(
-                        flex: 1,
+                      Container(
+                        height: MediaQuery.of(context).size.height / 12,
                         child: ElevatedButton(
                           onPressed: () {
                             appState.pid = -1;

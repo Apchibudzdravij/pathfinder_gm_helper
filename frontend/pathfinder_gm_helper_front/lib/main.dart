@@ -1,4 +1,4 @@
-//import 'dart:math';
+import 'dart:math';
 
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -22,6 +22,64 @@ import 'package:pathfinder_gm_helper_front/content/monsters.dart';
 import 'package:pathfinder_gm_helper_front/content/environment/wilderness.dart';
 
 import 'content/environment/subweather.dart';
+
+class WebSocketServer {
+  final Map<String, Set<WebSocketChannel>> rooms = {};
+
+  void handleConnection(WebSocketChannel channel, String type) {
+    final clientId =
+        generateClientId(); // Генерируйте уникальный идентификатор для каждого клиента
+    final room = rooms.putIfAbsent(type, () => Set<WebSocketChannel>());
+    room.add(channel);
+
+    channel.stream.listen((message) {
+      print('Received message: $message');
+      var jsonmessage = json.decode(message.toString());
+      //_showToast(context, jsonmessage['setRequest']['Message'],
+      //    int.parse(jsonmessage['setRequest']['RID']), uid);
+      showToastWidget(
+          Padding(
+            padding: const EdgeInsets.all(15.0),
+            child: SizedBox(
+              width: 300,
+              height: 100,
+              child: Card(
+                color: Color.fromRGBO(239, 214, 255, 1),
+                child: Text(
+                  jsonmessage['setRequest']['Message'],
+                  style: TextStyle(fontSize: 14.0),
+                  textAlign: TextAlign.justify,
+                ),
+              ),
+            ),
+          ),
+          position: ToastPosition(align: Alignment.bottomLeft, offset: 10.0),
+          duration: Duration(seconds: 10));
+    });
+
+    channel.sink.done.then((_) {
+      // Удаление клиента из комнаты при закрытии соединения
+      room.remove(channel);
+    });
+  }
+
+  void sendMessageToRoom(dynamic message, String type) {
+    final room = rooms[type];
+    if (room != null) {
+      for (final channel in room) {
+        channel.sink.add(message);
+      }
+    }
+  }
+
+  String generateClientId() {
+    // Генерация уникального идентификатора для клиента
+    // Возможны различные реализации, включая использование UUID
+    // В этом примере просто генерируем случайное число в качестве идентификатора
+    final random = Random();
+    return random.nextInt(999999).toString();
+  }
+}
 
 void main() {
   runApp(const MyApp());
@@ -100,9 +158,10 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   String message = '';
-  late WebSocketChannel channel;
+  //late WebSocketChannel channel;
+  final server = WebSocketServer();
 
-  @override
+  /*@override
   void dispose() {
     channel.sink.close();
     super.dispose();
@@ -130,12 +189,10 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 100,
               child: Card(
                 color: Color.fromRGBO(239, 214, 255, 1),
-                child: SingleChildScrollView(
-                  child: Text(
-                    jsonmessage['setRequest']['Message'],
-                    style: TextStyle(fontSize: 200.0),
-                    textAlign: TextAlign.justify,
-                  ),
+                child: Text(
+                  jsonmessage['setRequest']['Message'],
+                  style: TextStyle(fontSize: 14.0),
+                  textAlign: TextAlign.justify,
                 ),
               ),
             ),
@@ -144,17 +201,19 @@ class _MyHomePageState extends State<MyHomePage> {
           duration: Duration(seconds: 10));
       setState(() {});
     });
-  }
+  }*/
 
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppPageState>();
     var stateOfMain = appState.stateOfMain;
 
-    if (appState.uid == -1) {
+    /*if (appState.uid == -1) {
       channel.sink.close();
-    } else if (appState.type == 'm') {
-      connectToWebSocket(context, appState.uid);
+    } else*/
+    if (appState.type == 'm') {
+      final channel = HtmlWebSocketChannel.connect('wss://localhost:7777/');
+      server.handleConnection(channel, 'm');
     }
 
     Widget page;

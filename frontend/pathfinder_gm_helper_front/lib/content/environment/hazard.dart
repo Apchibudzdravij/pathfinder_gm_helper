@@ -229,8 +229,9 @@ class _ShowHazardState extends State<ShowHazard> {
     this.hazard = await sendGraphQLgetHazards(context, pid);
     await checkIfStar(context, pid, uid);
     if (isFirst) {
-      setState(() {});
-      isFirst = false;
+      setState(() {
+        isFirst = false;
+      });
     }
   }
 

@@ -463,18 +463,29 @@ class _ShowWildernessState extends State<ShowWilderness> {
                                         4.5,
                                     child: Padding(
                                       padding: const EdgeInsets.all(10.0),
-                                      child: Expanded(
-                                        child: SingleChildScrollView(
-                                          child: Column(
-                                            children: this
-                                                .wilderness
-                                                .wildDetail
-                                                .map((sub) =>
-                                                    buildInputDecorator(
-                                                        sub.Name,
-                                                        sub.Description,
-                                                        sub.WDID))
-                                                .toList(),
+                                      child: SingleChildScrollView(
+                                        child: Container(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              this
+                                                  .wilderness
+                                                  .wildDetail
+                                                  .length /
+                                              3,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(5.0),
+                                            child: Column(
+                                              children: this
+                                                  .wilderness
+                                                  .wildDetail
+                                                  .map((sub) =>
+                                                      buildInputDecorator(
+                                                          sub.Name,
+                                                          sub.Description,
+                                                          sub.WDID))
+                                                  .toList(),
+                                            ),
                                           ),
                                         ),
                                       ),

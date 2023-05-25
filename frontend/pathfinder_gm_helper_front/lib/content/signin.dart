@@ -131,6 +131,10 @@ class _LogInState extends State<LogIn> {
                       width: MediaQuery.of(context).size.width / 5,
                       child: TextField(
                         controller: textFieldController1,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^[a-zA-Z0-9а-яА-Я]{1,32}$')),
+                        ],
                         decoration: const InputDecoration(
                           hintText: 'aka Юзернейм', // Подсказка в поле ввода
                           labelText: 'Логин',
@@ -143,6 +147,10 @@ class _LogInState extends State<LogIn> {
                       width: MediaQuery.of(context).size.width / 5,
                       child: TextField(
                         controller: textFieldController2,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^.{1,32}$')),
+                        ],
                         decoration: const InputDecoration(
                           hintText: '********', // Подсказка в поле ввода
                           labelText: 'Пароль',
@@ -190,7 +198,7 @@ class _LogInState extends State<LogIn> {
                         controller: textFieldController3,
                         inputFormatters: [
                           FilteringTextInputFormatter.allow(
-                              RegExp(r'[a-zA-Z0-9а-яА-Я]+[\w]*')),
+                              RegExp(r'^[a-zA-Z0-9а-яА-Я]{1,32}$')),
                         ],
                         decoration: const InputDecoration(
                           hintText: 'aka Юзернейм', // Подсказка в поле ввода
@@ -204,6 +212,10 @@ class _LogInState extends State<LogIn> {
                       width: MediaQuery.of(context).size.width / 5,
                       child: TextField(
                         controller: textFieldController4,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^.{1,32}$')),
+                        ],
                         decoration: const InputDecoration(
                           hintText: '********', // Подсказка в поле ввода
                           labelText: 'Пароль',
@@ -221,6 +233,10 @@ class _LogInState extends State<LogIn> {
                       width: MediaQuery.of(context).size.width / 5,
                       child: TextField(
                         controller: textFieldController5,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^.{1,32}$')),
+                        ],
                         decoration: const InputDecoration(
                           hintText: '********', // Подсказка в поле ввода
                           labelText: 'Повторите пароль',

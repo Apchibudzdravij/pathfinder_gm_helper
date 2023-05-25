@@ -460,18 +460,32 @@ class _ShowWeatherState extends State<ShowWeather> {
                                         4.5,
                                     child: Padding(
                                       padding: const EdgeInsets.all(10.0),
-                                      child: Expanded(
-                                        child: SingleChildScrollView(
-                                          child: Column(
-                                            children: this
-                                                .weather
-                                                .subWeather
-                                                .map((sub) =>
-                                                    buildInputDecorator(
-                                                        sub.Name,
-                                                        sub.Description,
-                                                        sub.SWID))
-                                                .toList(),
+                                      child: SingleChildScrollView(
+                                        child: Container(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              this.weather.subWeather.length /
+                                              8,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(5.0),
+                                            child: ListView.builder(
+                                              itemCount: this
+                                                  .weather
+                                                  .subWeather
+                                                  .length,
+                                              itemBuilder:
+                                                  (BuildContext context,
+                                                      int index) {
+                                                var sub = this
+                                                    .weather
+                                                    .subWeather[index];
+                                                return buildInputDecorator(
+                                                    sub.Name,
+                                                    sub.Description,
+                                                    sub.SWID);
+                                              },
+                                            ),
                                           ),
                                         ),
                                       ),

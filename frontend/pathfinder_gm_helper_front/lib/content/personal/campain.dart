@@ -398,18 +398,26 @@ class _ShowCampainState extends State<ShowCampain> {
                                         4.5,
                                     child: Padding(
                                       padding: const EdgeInsets.all(10.0),
-                                      child: Expanded(
-                                        child: SingleChildScrollView(
-                                          child: Column(
-                                            children: this
-                                                .campain
-                                                .sessions
-                                                .map((sub) =>
-                                                    buildInputDecorator(
-                                                        sub.Name,
-                                                        sub.Description,
-                                                        sub.GSID))
-                                                .toList(),
+                                      child: SingleChildScrollView(
+                                        child: Container(
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              this.campain.sessions.length /
+                                              3,
+                                          child: Padding(
+                                            padding: const EdgeInsets.all(5.0),
+                                            child: Column(
+                                              children: this
+                                                  .campain
+                                                  .sessions
+                                                  .map((sub) =>
+                                                      buildInputDecorator(
+                                                          sub.Name,
+                                                          sub.Description,
+                                                          sub.GSID))
+                                                  .toList(),
+                                            ),
                                           ),
                                         ),
                                       ),

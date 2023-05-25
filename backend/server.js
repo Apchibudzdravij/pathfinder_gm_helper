@@ -39,11 +39,23 @@ const wss = new Server({
     server
 });
 
+const connections = new Set();
+
 wss.on('connection', function connection(ws) {
-    ws.on('error', console.error);
+    /*ws.on('error', console.error);
     wsConnection = ws;
     ws.on('message', function message(data) {
         console.log('received: %s', data);
+    });*/
+    ws.on('error', console.error);
+    connections.add(ws);
+
+    ws.on('message', function message(data) {
+        console.log('received: %s', data);
+    });
+
+    ws.on('close', function close() {
+        connections.delete(ws);
     });
 });
 
@@ -112,12 +124,20 @@ router.post('/api/:parm', async (ctx) => {
             console.log(toUser.data);
             if ((!(!toUser.data.setRequest)) && (toUser.data.setRequest.State == 'New')) {
                 //io.emit('message', toUser);
-                if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+                /*if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
                     wsConnection.send(JSON.stringify(toUser.data));
                     console.log('WSS: send to client!');
                 } else {
                     console.log('WebSocket connection is not open.');
-                }
+                }*/
+                connections.forEach((connection) => {
+                    if (connection.readyState === WebSocket.OPEN) {
+                        connection.send(JSON.stringify(toUser.data));
+                        console.log('WSS: send to client!');
+                    } else {
+                        console.log('WebSocket connection is not open.');
+                    }
+                });
                 console.log(toUser);
             }
             ctx.body = toUser;
